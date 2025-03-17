@@ -1,50 +1,140 @@
-# Welcome to your Expo app 👋
+# QuickReservation - Cross-Platform Retail Reservation App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern reservation system that helps retailers manage appointments and bookings efficiently across web, Android, and iOS platforms.
 
-## Get started
+## 🚀 Tech Stack
 
-1. Install dependencies
+- **Frontend Framework**: React Native + Expo
+- **State Management**: Redux Toolkit
+- **UI Components**: React Native Paper
+- **Navigation**: Expo Router
+- **Authentication**: Firebase Auth (coming soon)
+- **Code Quality**: ESLint & Prettier
+- **Language**: TypeScript
+- **Testing**: Jest & React Testing Library (coming soon)
 
-   ```bash
-   npm install
-   ```
+## 📱 Supported Platforms
 
-2. Start the app
+- Web (Primary development platform)
+- Android (via Expo)
+- iOS (via Expo)
 
-   ```bash
-    npx expo start
-   ```
+## 🛠️ Project Structure
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+quickreservation/
+├── app/                    # Main application code
+│   ├── (app)/             # Protected app routes
+│   │   ├── _layout.tsx    # App layout with bottom tabs
+│   │   ├── index.tsx      # Home screen
+│   │   ├── bookings.tsx   # Bookings screen
+│   │   └── profile.tsx    # Profile screen
+│   ├── (auth)/            # Authentication routes
+│   │   ├── login.tsx      # Login screen
+│   │   └── register.tsx   # Registration screen
+│   └── _layout.tsx        # Root layout
+├── store/                  # Redux store configuration
+│   ├── index.ts           # Store setup
+│   └── slices/            # Redux slices
+│       └── authSlice.ts   # Authentication slice
+├── components/            # Reusable components
+├── constants/             # App constants
+├── hooks/                # Custom hooks
+└── assets/              # Static assets
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🚀 Getting Started
 
-## Learn more
+### Prerequisites
 
-To learn more about developing your project with Expo, look at the following resources:
+- Node.js (v16 or higher)
+- npm or yarn
+- Expo CLI (`npm install -g expo-cli`)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Installation
 
-## Join the community
+1. Clone the repository:
 
-Join our community of developers creating universal apps.
+```bash
+git clone [repository-url]
+cd quickreservation
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Start the development server:
+
+```bash
+# For web
+npm run web
+
+# For iOS
+npm run ios
+
+# For Android
+npm run android
+```
+
+## 🔐 Authentication
+
+The app includes a complete authentication flow with:
+
+- User registration
+- Login
+- Password recovery (coming soon)
+- Protected routes
+
+## 📱 Features
+
+### Current Features
+
+- Modern UI with React Native Paper
+- Bottom tab navigation
+- Responsive layouts
+- Type-safe development with TypeScript
+- State management with Redux Toolkit
+- Authentication flow UI
+
+### Coming Soon
+
+- Firebase integration
+- Real-time updates
+- Booking management
+- Push notifications
+- Payment processing
+- Admin dashboard
+
+## 🧪 Development
+
+### Code Style
+
+The project uses ESLint and Prettier for code formatting. Configuration files are included:
+
+- `.eslintrc.json` - ESLint configuration
+- `.prettierrc` - Prettier configuration
+
+To format your code:
+
+```bash
+# Check formatting
+npm run lint
+
+# Fix formatting
+npm run lint:fix
+```
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
