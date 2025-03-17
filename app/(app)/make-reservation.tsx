@@ -1,10 +1,20 @@
-import { View, ScrollView, StyleSheet, Modal, TouchableOpacity } from 'react-native';
-import { Text, Button, TextInput, Chip, Surface } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  Text,
+  Button,
+  TextInput,
+  Chip,
+  Surface,
+  ActivityIndicator,
+  Snackbar,
+} from 'react-native-paper';
 import { useState, useCallback, useEffect } from 'react';
 import { router } from 'expo-router';
 import { useDispatch } from 'react-redux';
-import { addReservation } from '../../store/slices/reservationSlice';
+import { addReservationAsync } from '../../store/slices/reservationSlice';
 import { Calendar } from 'react-native-calendars';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Available time slots
 const TIME_SLOTS = [
@@ -40,6 +50,8 @@ export default function MakeReservationScreen() {
   const [isCalendarVisible, setCalendarVisible] = useState(false);
   const [isTimeSlotsVisible, setTimeSlotsVisible] = useState(false);
   const [isFormValid, setFormValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
@@ -77,13 +89,12 @@ export default function MakeReservationScreen() {
     return valid;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
     const newReservation = {
-      id: Date.now().toString(),
       name,
       date: selectedDate,
       time: selectedTime,
@@ -91,8 +102,21 @@ export default function MakeReservationScreen() {
       createdAt: new Date().toISOString(),
     };
 
-    dispatch(addReservation(newReservation));
-    router.back();
+    try {
+      setIsLoading(true);
+      await dispatch(addReservationAsync(newReservation)).unwrap();
+      setShowSuccess(true);
+      // Wait for 1.5 seconds to show the success message before navigating back
+      setTimeout(() => {
+        router.back();
+      }, 1500);
+    } catch (error) {
+      console.error('Failed to add reservation:', error);
+      // Show error in the existing error text area
+      setNameError('Failed to save reservation. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDateSelect = day => {
@@ -104,148 +128,221 @@ export default function MakeReservationScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Make a Reservation
-        </Text>
+    <View style={styles.container}>
+      <LinearGradient colors={['#4A00E0', '#8E2DE2']} style={styles.header}>
+        <View style={styles.headerContent}>
+          <MaterialCommunityIcons name="calendar-plus" size={32} color="white" />
+          <Text variant="headlineMedium" style={styles.headerTitle}>
+            Make Reservation
+          </Text>
+        </View>
+      </LinearGradient>
 
-        {nameError || dateError || timeError ? (
-          <Text style={styles.errorText}>{nameError || dateError || timeError}</Text>
-        ) : null}
-
-        <TextInput
-          label="Full Name"
-          value={name}
-          onChangeText={setName}
-          mode="outlined"
-          style={styles.input}
-        />
-        {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
-
-        <TouchableOpacity onPress={() => setCalendarVisible(!isCalendarVisible)}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+        <Surface style={styles.formContainer} elevation={2}>
           <TextInput
-            label="Selected Date"
-            value={selectedDate}
+            label="Full Name"
+            value={name}
+            onChangeText={setName}
             mode="outlined"
             style={styles.input}
-            editable={false}
+            error={!!nameError}
+            outlineColor="#4A00E0"
+            activeOutlineColor="#4A00E0"
           />
-        </TouchableOpacity>
-        {dateError ? <Text style={styles.errorText}>{dateError}</Text> : null}
+          {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
 
-        {isCalendarVisible && (
-          <Surface style={styles.calendarContainer} elevation={1}>
-            <Calendar
-              minDate={today}
-              onDayPress={day => {
-                handleDateSelect(day);
-                setCalendarVisible(false);
-              }}
-              markedDates={markedDates}
-              theme={{
-                todayTextColor: '#6200ee',
-                selectedDayBackgroundColor: '#6200ee',
-                arrowColor: '#6200ee',
-              }}
+          <TouchableOpacity onPress={() => setCalendarVisible(!isCalendarVisible)}>
+            <TextInput
+              label="Selected Date"
+              value={selectedDate}
+              mode="outlined"
+              style={styles.input}
+              editable={false}
+              error={!!dateError}
+              right={<TextInput.Icon icon="calendar" />}
+              outlineColor="#4A00E0"
+              activeOutlineColor="#4A00E0"
             />
-          </Surface>
-        )}
+          </TouchableOpacity>
+          {dateError ? <Text style={styles.errorText}>{dateError}</Text> : null}
 
-        <TouchableOpacity onPress={() => setTimeSlotsVisible(!isTimeSlotsVisible)}>
+          {isCalendarVisible && (
+            <Surface style={styles.calendarContainer} elevation={1}>
+              <Calendar
+                minDate={today}
+                onDayPress={day => {
+                  handleDateSelect(day);
+                  setCalendarVisible(false);
+                }}
+                markedDates={markedDates}
+                theme={{
+                  todayTextColor: '#4A00E0',
+                  selectedDayBackgroundColor: '#4A00E0',
+                  arrowColor: '#4A00E0',
+                }}
+              />
+            </Surface>
+          )}
+
+          <TouchableOpacity onPress={() => setTimeSlotsVisible(!isTimeSlotsVisible)}>
+            <TextInput
+              label="Selected Time"
+              value={selectedTime}
+              mode="outlined"
+              style={styles.input}
+              editable={false}
+              error={!!timeError}
+              right={<TextInput.Icon icon="clock" />}
+              outlineColor="#4A00E0"
+              activeOutlineColor="#4A00E0"
+            />
+          </TouchableOpacity>
+          {timeError ? <Text style={styles.errorText}>{timeError}</Text> : null}
+
+          {isTimeSlotsVisible && (
+            <View style={styles.timeSlotContainer}>
+              {TIME_SLOTS.map(time => (
+                <Chip
+                  key={time}
+                  selected={selectedTime === time}
+                  onPress={() => handleTimeSelect(time)}
+                  style={styles.timeChip}
+                  selectedColor="#4A00E0"
+                  mode={selectedTime === time ? 'flat' : 'outlined'}
+                >
+                  {time}
+                </Chip>
+              ))}
+            </View>
+          )}
+
           <TextInput
-            label="Selected Time"
-            value={selectedTime}
+            label="Additional Notes"
+            value={notes}
+            onChangeText={setNotes}
             mode="outlined"
-            style={styles.input}
-            editable={false}
+            multiline
+            numberOfLines={4}
+            style={styles.notesInput}
+            outlineColor="#4A00E0"
+            activeOutlineColor="#4A00E0"
           />
-        </TouchableOpacity>
-        {timeError ? <Text style={styles.errorText}>{timeError}</Text> : null}
 
-        {isTimeSlotsVisible && (
-          <View style={styles.timeSlotContainer}>
-            {TIME_SLOTS.map(time => (
-              <Chip
-                key={time}
-                selected={selectedTime === time}
-                onPress={() => handleTimeSelect(time)}
-                style={styles.timeChip}
-                mode={selectedTime === time ? 'flat' : 'outlined'}
-              >
-                {time}
-              </Chip>
-            ))}
-          </View>
-        )}
+          <Button
+            mode="contained"
+            onPress={handleSubmit}
+            style={styles.submitButton}
+            contentStyle={styles.buttonContent}
+            labelStyle={styles.buttonLabel}
+            loading={isLoading}
+            disabled={!isFormValid || isLoading}
+            buttonColor="#4A00E0"
+          >
+            {isLoading ? 'Saving...' : 'Submit Reservation'}
+          </Button>
 
-        <TextInput
-          label="Additional Notes"
-          value={notes}
-          onChangeText={setNotes}
-          mode="outlined"
-          multiline
-          numberOfLines={4}
-          style={styles.notesInput}
-        />
+          <Button
+            mode="outlined"
+            onPress={() => router.back()}
+            style={styles.cancelButton}
+            disabled={isLoading}
+            textColor="#4A00E0"
+          >
+            Cancel
+          </Button>
+        </Surface>
+      </ScrollView>
 
-        <Button
-          mode="contained"
-          onPress={handleSubmit}
-          style={styles.submitButton}
-          disabled={!isFormValid}
-        >
-          Submit Reservation
-        </Button>
-
-        <Button mode="outlined" onPress={() => router.back()}>
-          Cancel
-        </Button>
-      </View>
-    </ScrollView>
+      <Snackbar
+        visible={showSuccess}
+        duration={1500}
+        onDismiss={() => setShowSuccess(false)}
+        style={styles.snackbar}
+      >
+        Reservation saved successfully!
+      </Snackbar>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: 'white',
+    marginLeft: 12,
+    fontWeight: 'bold',
   },
   content: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 16,
+    paddingBottom: 32,
   },
-  title: {
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 16,
-    textAlign: 'center',
+  formContainer: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'white',
   },
   input: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
     marginBottom: 8,
-    marginTop: 8,
+    backgroundColor: 'white',
+  },
+  errorText: {
+    color: '#B00020',
+    fontSize: 12,
+    marginBottom: 8,
+    marginLeft: 8,
   },
   calendarContainer: {
-    borderRadius: 8,
-    overflow: 'hidden',
     marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   timeSlotContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 24,
+    marginBottom: 16,
+    marginTop: 8,
   },
   timeChip: {
     margin: 4,
   },
   notesInput: {
     marginBottom: 24,
+    backgroundColor: 'white',
   },
   submitButton: {
-    marginBottom: 16,
+    marginBottom: 12,
+    borderRadius: 8,
+  },
+  buttonContent: {
+    height: 48,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    borderColor: '#4A00E0',
+    borderRadius: 8,
+  },
+  snackbar: {
+    position: 'absolute',
+    bottom: 0,
+    backgroundColor: '#4CAF50',
   },
 });
