@@ -1,8 +1,8 @@
-# Quick Reservation - Development Guide
+# QReserv Development Guide
 
 ## Project Overview
 
-Quick Reservation is a modern mobile application built with React Native and Expo, designed to provide a seamless reservation management experience. The application allows users to create, manage, and track their reservations with an intuitive and user-friendly interface.
+QReserv is a modern mobile application built with React Native and Expo, designed to provide a seamless reservation management experience. The application allows users to create, manage, and track their reservations with an intuitive and user-friendly interface.
 
 ## Tech Stack
 
@@ -18,7 +18,7 @@ Quick Reservation is a modern mobile application built with React Native and Exp
 ## Project Structure
 
 ```
-QuickReservation/
+qreserv/
 ├── app/
 │   └── (app)/
 │       ├── _layout.tsx         # Main navigation layout

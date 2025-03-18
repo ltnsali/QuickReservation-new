@@ -1,5 +1,5 @@
 {
-  "name": "quickreservation-new",
+  "name": "qreserv",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -64,6 +64,7 @@
     "jest-expo": "~52.0.6",
     "prettier": "^3.5.3",
     "react-test-renderer": "18.3.1",
+    "sharp": "^0.33.5",
     "typescript": "^5.3.3"
   },
   "private": true
