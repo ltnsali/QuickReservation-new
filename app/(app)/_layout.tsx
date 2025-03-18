@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { Platform, StatusBar } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function AppLayout() {
+export default function ReservationTabsLayout() {
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#4A00E0" translucent={true} />
