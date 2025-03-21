@@ -1,28 +1,24 @@
-import { Provider, useDispatch } from 'react-redux';
+import { Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
-import { store, AppDispatch } from '../store';
-import { Slot } from 'expo-router';
-import { useEffect } from 'react';
-import { fetchReservations } from '../store/slices/reservationSlice';
-
-// Create a separate component for Redux-dependent code
-function AppContent() {
-  const dispatch = useDispatch<AppDispatch>();
-
-  useEffect(() => {
-    // Fetch reservations when the app starts
-    void dispatch(fetchReservations());
-  }, [dispatch]);
-
-  return <Slot />;
-}
+import { AuthProvider } from './features/auth/AuthContext';
+import { Provider } from 'react-redux';
+import { store } from '../store';
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <PaperProvider>
-        <AppContent />
-      </PaperProvider>
+      <AuthProvider>
+        <PaperProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(app)" options={{ headerShown: false }} />
+          </Stack>
+        </PaperProvider>
+      </AuthProvider>
     </Provider>
   );
 }

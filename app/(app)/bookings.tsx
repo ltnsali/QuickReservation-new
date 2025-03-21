@@ -1,18 +1,39 @@
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Surface, IconButton, useTheme, ActivityIndicator } from 'react-native-paper';
-import { useSelector } from 'react-redux';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { RootState } from '../../store';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { fetchReservations } from '../../store/slices/reservationSlice';
+import { useEffect } from 'react';
+import { useAuth } from '../features/auth/AuthContext';
 
 export default function BookingsScreen() {
   const theme = useTheme();
-  const { reservations, loading } = useSelector((state: RootState) => state.reservations);
+  const dispatch = useAppDispatch();
+  const { user } = useAuth();
+  const { reservations, loading, error } = useAppSelector(state => state.reservations);
+
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchReservations(user.id));
+    }
+  }, [dispatch, user]);
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4A00E0" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <MaterialCommunityIcons name="alert" size={64} color="#dc2626" />
+        <Text variant="titleMedium" style={styles.errorText}>
+          {error}
+        </Text>
       </View>
     );
   }
@@ -34,6 +55,9 @@ export default function BookingsScreen() {
             <MaterialCommunityIcons name="calendar-blank" size={64} color="#4A00E0" />
             <Text variant="titleMedium" style={styles.emptyText}>
               No reservations yet
+            </Text>
+            <Text style={styles.emptySubText}>
+              Your upcoming reservations will appear here
             </Text>
           </View>
         ) : (
@@ -80,6 +104,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    color: '#dc2626',
+    textAlign: 'center',
+  },
   header: {
     paddingVertical: 24,
     paddingHorizontal: 16,
@@ -109,6 +144,12 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 16,
     color: '#666',
+    marginBottom: 8,
+  },
+  emptySubText: {
+    color: '#888',
+    fontSize: 14,
+    textAlign: 'center',
   },
   card: {
     marginBottom: 16,

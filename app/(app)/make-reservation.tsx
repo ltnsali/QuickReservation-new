@@ -15,6 +15,7 @@ import { addReservationAsync } from '../../store/slices/reservationSlice';
 import { Calendar } from 'react-native-calendars';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '../features/auth/AuthContext';
 
 // Available time slots
 const TIME_SLOTS = [
@@ -40,6 +41,7 @@ const TIME_SLOTS = [
 
 export default function MakeReservationScreen() {
   const dispatch = useDispatch();
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -94,17 +96,21 @@ export default function MakeReservationScreen() {
       return;
     }
 
+    if (!user) {
+      setNameError('You must be logged in to make a reservation');
+      return;
+    }
+
     const newReservation = {
       name,
       date: selectedDate,
       time: selectedTime,
       notes,
-      createdAt: new Date().toISOString(),
     };
 
     try {
       setIsLoading(true);
-      await dispatch(addReservationAsync(newReservation)).unwrap();
+      await dispatch(addReservationAsync({ reservation: newReservation, userId: user.id })).unwrap();
       setShowSuccess(true);
       // Wait for 1.5 seconds to show the success message before navigating back
       setTimeout(() => {

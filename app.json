@@ -1,15 +1,16 @@
 {
   "expo": {
-    "name": "QReserv",
-    "slug": "qreserv",
+    "name": "QuickReservation",
+    "slug": "QuickReservation",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "qreserv",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#4A00E0"
+      "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -19,12 +20,19 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#4A00E0"
+        "backgroundColor": "#ffffff"
       },
       "package": "com.qreserv.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "config": {
+        "google": {
+          "clientId": "57102764070-q106sapm1qn0rh33qrgqlpjnha9hpu0r.apps.googleusercontent.com"
+        }
+      }
+    },
+    "plugins": ["expo-router"]
   }
 }

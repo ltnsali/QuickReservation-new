@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -18,6 +19,9 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firestore
 const db = getFirestore(app);
 
+// Initialize Auth
+const auth = getAuth(app);
+
 // Initialize Analytics only in client-side environment
 let analytics = null;
 if (typeof window !== 'undefined') {
@@ -25,4 +29,4 @@ if (typeof window !== 'undefined') {
   analytics = getAnalytics(app);
 }
 
-export { app, analytics, db };
+export { app, analytics, db, auth };

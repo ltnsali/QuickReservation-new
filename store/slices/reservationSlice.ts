@@ -7,6 +7,7 @@ import {
 
 export interface Reservation {
   id: string;
+  userId: string;
   name: string;
   date: string;
   time: string;
@@ -27,26 +28,31 @@ const initialState: ReservationState = {
 };
 
 // Async thunks for Firestore operations
-export const fetchReservations = createAsyncThunk('reservations/fetchReservations', async () => {
-  const reservations = await loadReservationsFromFirestore();
-  return reservations;
-});
+export const fetchReservations = createAsyncThunk(
+  'reservations/fetchReservations',
+  async (userId: string) => {
+    const reservations = await loadReservationsFromFirestore(userId);
+    return reservations;
+  }
+);
 
 export const addReservationAsync = createAsyncThunk(
   'reservations/addReservation',
-  async (reservation: Omit<Reservation, 'id'>) => {
-    const savedReservation = await saveReservationToFirestore({
+  async ({ reservation, userId }: { reservation: Omit<Reservation, 'id' | 'userId' | 'createdAt'>, userId: string }) => {
+    const reservationData = {
       ...reservation,
-      id: '', // This will be replaced by Firestore's auto-generated ID
-    });
+      userId,
+      createdAt: new Date().toISOString()
+    };
+    const savedReservation = await saveReservationToFirestore(reservationData);
     return savedReservation;
   }
 );
 
 export const deleteReservationAsync = createAsyncThunk(
   'reservations/deleteReservation',
-  async (id: string) => {
-    await deleteReservationFromFirestore(id);
+  async ({ id, userId }: { id: string; userId: string }) => {
+    await deleteReservationFromFirestore(id, userId);
     return id;
   }
 );
