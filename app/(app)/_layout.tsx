@@ -76,6 +76,15 @@ export default function AppLayout() {
           }}
         />
         <Tabs.Screen
+          name="make-reservation"
+          options={{
+            title: 'Reserve',
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="calendar-plus" size={26} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="profile"
           options={{
             title: 'Profile',
