@@ -1,5 +1,14 @@
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Surface, IconButton, useTheme, ActivityIndicator, Portal, Dialog, Button } from 'react-native-paper';
+import {
+  Text,
+  Surface,
+  IconButton,
+  useTheme,
+  ActivityIndicator,
+  Portal,
+  Dialog,
+  Button,
+} from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
@@ -70,9 +79,7 @@ export default function BookingsScreen() {
             <Text variant="titleMedium" style={styles.emptyText}>
               No reservations yet
             </Text>
-            <Text style={styles.emptySubText}>
-              Your upcoming reservations will appear here
-            </Text>
+            <Text style={styles.emptySubText}>Your upcoming reservations will appear here</Text>
           </View>
         ) : (
           reservations.map(reservation => (
@@ -121,7 +128,9 @@ export default function BookingsScreen() {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
-            <Button onPress={confirmDelete} textColor="#dc2626">Delete</Button>
+            <Button onPress={confirmDelete} textColor="#dc2626">
+              Delete
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
