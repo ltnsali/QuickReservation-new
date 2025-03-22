@@ -7,6 +7,7 @@ import { Stack } from 'expo-router';
 import { useAuth } from '../features/auth/AuthContext';
 import { Redirect } from 'expo-router';
 import { HeaderTitle } from '../../components/HeaderTitle';
+import { UserAvatar } from '../../components/ui/UserAvatar';
 
 const HEADER_HEIGHT = Platform.OS === 'ios' ? 96 : 80;
 const { width } = Dimensions.get('window');
@@ -30,43 +31,12 @@ export default function AppLayout() {
           onDismiss={() => setMenuVisible(false)}
           anchor={
             <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.profileButton}>
-              {user.photo ? (
-                <Avatar.Image 
-                  size={40} 
-                  source={{ 
-                    uri: user.photo,
-                    headers: {
-                      'Cache-Control': 'no-cache',
-                      'Pragma': 'no-cache'
-                    }
-                  }}
-                  onError={(e) => {
-                    console.log('Avatar image error:', e.nativeEvent);
-                    // Force a re-render on error
-                    setMenuVisible(prev => !prev);
-                    setMenuVisible(prev => !prev);
-                  }}
-                />
-              ) : (
-                <Avatar.Text 
-                  size={40} 
-                  label={user.name.charAt(0).toUpperCase()} 
-                  style={{ backgroundColor: '#6200ee' }}
-                />
-              )}
+              {user && <UserAvatar user={user} size={40} />}
             </TouchableOpacity>
           }
         >
-          <Menu.Item
-            leadingIcon="account"
-            title={user.name}
-            style={styles.menuItem}
-          />
-          <Menu.Item
-            leadingIcon="email"
-            title={user.email}
-            style={styles.menuItem}
-          />
+          <Menu.Item leadingIcon="account" title={user.name} style={styles.menuItem} />
+          <Menu.Item leadingIcon="email" title={user.email} style={styles.menuItem} />
           <Menu.Item
             leadingIcon="logout"
             onPress={() => {
@@ -134,5 +104,5 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     maxWidth: 300,
-  }
+  },
 });

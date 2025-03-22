@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: false,
-          use_fedcm_for_prompt: false // Disable FedCM
+          use_fedcm_for_prompt: false, // Disable FedCM
         });
 
         // Configure the button first
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           type: 'standard',
           theme: 'outline',
           size: 'large',
-          width: 400
+          width: 400,
         });
 
         // Then show the One Tap dialog
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // First sign in with Firebase
       const credential = GoogleAuthProvider.credential(response.credential);
       const result = await signInWithCredential(auth, credential);
-      
+
       if (!result.user) {
         throw new Error('Failed to sign in with Firebase');
       }
@@ -113,34 +113,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { email, name, picture } = JSON.parse(jsonPayload);
 
-      // Get photo URL from Google provider data
-      const googleProvider = result.user.providerData.find(
-        provider => provider.providerId === 'google.com'
-      );
+      // Get the best available photo URL:
+      // 1. Try Firebase auth photoURL first
+      // 2. Fall back to picture from token
+      // Make sure it's a larger size for Google photos
+      let photoUrl = result.user.photoURL || picture || '';
 
-      // Get base photo URL and ensure it's HTTPS
-      let photoUrl = googleProvider?.photoURL || picture || '';
-      
-      // Format Google photo URL to ensure it works in React Native
-      if (photoUrl.includes('googleusercontent.com')) {
-        // Remove any existing size parameters
-        photoUrl = photoUrl.split('=')[0];
-        // Add size parameter that works well with Avatar
-        photoUrl += '=s400-c';
+      if (photoUrl && photoUrl.includes('googleusercontent.com') && photoUrl.includes('=')) {
+        // For Google profile photos, use a larger size (s400 instead of default s96)
+        photoUrl = photoUrl.split('=')[0] + '=s400-c';
       }
 
       const userData: User = {
         id: result.user.uid,
         email: result.user.email || email || '',
         name: result.user.displayName || name || 'User',
-        photo: photoUrl
+        photo: photoUrl,
       };
 
       console.log('User data being saved:', userData);
 
       // Save user data to Firestore
       await dispatch(createOrUpdateUser(userData)).unwrap();
-      
+
       setUser(userData);
       router.replace('/(app)');
     } catch (error) {
@@ -156,19 +151,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        photo: userData.photoUrl || userData.picture
+        photo: userData.photoUrl || userData.picture,
       };
 
       // Save user data to Firestore
       await dispatch(createOrUpdateUser(userInfo)).unwrap();
-      
+
       setUser(userInfo);
       router.replace('/(app)');
     } else if (Platform.OS === 'web' && window.google) {
       // For web, just trigger the prompt again
       window.google.accounts.id.prompt((notification: any) => {
         if (notification.isNotDisplayed()) {
-          console.error('Google Sign-In prompt not displayed:', notification.getNotDisplayedReason());
+          console.error(
+            'Google Sign-In prompt not displayed:',
+            notification.getNotDisplayedReason()
+          );
         }
       });
     }
