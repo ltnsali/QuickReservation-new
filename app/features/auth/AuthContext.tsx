@@ -5,6 +5,7 @@ import { useAppDispatch } from '../../../store/hooks';
 import { createOrUpdateUser } from '../../../store/slices/userSlice';
 import { auth } from '../../../firebase/config';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface User {
   id: string;
@@ -38,10 +39,41 @@ declare global {
   }
 }
 
+const USER_STORAGE_KEY = '@user_data';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useAppDispatch();
+
+  // Load stored user data when app starts
+  useEffect(() => {
+    loadStoredUser();
+  }, []);
+
+  const loadStoredUser = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        // Optionally refresh the user data from Firestore
+        dispatch(createOrUpdateUser(userData));
+      }
+    } catch (error) {
+      console.error('Error loading stored user:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const persistUser = async (userData: User) => {
+    try {
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+    } catch (error) {
+      console.error('Error storing user data:', error);
+    }
+  };
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -135,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Save user data to Firestore
       await dispatch(createOrUpdateUser(userData)).unwrap();
-
+      await persistUser(userData); // Store user data
       setUser(userData);
       router.replace('/(app)');
     } catch (error) {
@@ -156,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Save user data to Firestore
       await dispatch(createOrUpdateUser(userInfo)).unwrap();
-
+      await persistUser(userInfo); // Store user data
       setUser(userInfo);
       router.replace('/(app)');
     } else if (Platform.OS === 'web' && window.google) {
@@ -173,18 +205,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    if (Platform.OS === 'web' && window.google && user) {
-      window.google.accounts.id.cancel();
-      window.google.accounts.id.revoke(user.id, async () => {
-        await auth.signOut();
-        setUser(null);
-        router.replace('/(auth)');
-      });
-    } else {
-      await auth.signOut();
-      setUser(null);
-      router.replace('/(auth)');
+    try {
+      if (Platform.OS === 'web' && window.google && user) {
+        window.google.accounts.id.cancel();
+        window.google.accounts.id.revoke(user.id, async () => {
+          await handleSignOut();
+        });
+      } else {
+        await handleSignOut();
+      }
+    } catch (error) {
+      console.error('Error during sign out:', error);
     }
+  };
+
+  const handleSignOut = async () => {
+    await auth.signOut();
+    await AsyncStorage.removeItem(USER_STORAGE_KEY); // Remove stored user data
+    setUser(null);
+    router.replace('/(auth)');
   };
 
   return (

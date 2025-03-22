@@ -1,14 +1,15 @@
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Surface, IconButton, useTheme, ActivityIndicator } from 'react-native-paper';
+import { Text, Surface, IconButton, useTheme, ActivityIndicator, Portal, Dialog, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { fetchReservations } from '../../store/slices/reservationSlice';
-import { useEffect } from 'react';
+import { fetchReservations, deleteReservationAsync } from '../../store/slices/reservationSlice';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 
 export default function BookingsScreen() {
-  const theme = useTheme();
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const { user } = useAuth();
   const { reservations, loading, error } = useAppSelector(state => state.reservations);
@@ -38,6 +39,19 @@ export default function BookingsScreen() {
     );
   }
 
+  const handleDelete = async (id: string) => {
+    setSelectedReservation(id);
+    setDeleteDialogVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (selectedReservation && user) {
+      await dispatch(deleteReservationAsync({ id: selectedReservation, userId: user.id }));
+      setDeleteDialogVisible(false);
+      setSelectedReservation(null);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#4A00E0', '#8E2DE2']} style={styles.header}>
@@ -64,10 +78,18 @@ export default function BookingsScreen() {
           reservations.map(reservation => (
             <Surface key={reservation.id} style={styles.card} elevation={2}>
               <View style={styles.cardHeader}>
-                <MaterialCommunityIcons name="account" size={24} color="#4A00E0" />
-                <Text variant="titleMedium" style={styles.nameText}>
-                  {reservation.name}
-                </Text>
+                <View style={styles.cardHeaderLeft}>
+                  <MaterialCommunityIcons name="account" size={24} color="#4A00E0" />
+                  <Text variant="titleMedium" style={styles.nameText}>
+                    {reservation.name}
+                  </Text>
+                </View>
+                <IconButton
+                  icon="delete"
+                  iconColor="#dc2626"
+                  size={20}
+                  onPress={() => handleDelete(reservation.id)}
+                />
               </View>
 
               <View style={styles.cardContent}>
@@ -90,6 +112,19 @@ export default function BookingsScreen() {
           ))
         )}
       </ScrollView>
+
+      <Portal>
+        <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
+          <Dialog.Title>Delete Reservation</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">Are you sure you want to delete this reservation?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
+            <Button onPress={confirmDelete} textColor="#dc2626">Delete</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }
@@ -157,9 +192,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'white',
   },
+  cardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
     backgroundColor: '#f0f0f0',
   },
