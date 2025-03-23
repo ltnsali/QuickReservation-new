@@ -1,4 +1,4 @@
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import {
   Text,
   Button,
@@ -9,13 +9,15 @@ import {
   Snackbar,
 } from 'react-native-paper';
 import { useState, useCallback, useEffect } from 'react';
-import { router } from 'expo-router';
-import { useDispatch } from 'react-redux';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useAppDispatch } from '../../store/hooks';
 import { addReservationAsync } from '../../store/slices/reservationSlice';
 import { Calendar } from 'react-native-calendars';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../features/auth/AuthContext';
+import { RouteGuard } from '../utils/RouteGuard';
+import type { Reservation } from '../../firebase/firestore';
 
 // Available time slots
 const TIME_SLOTS = [
@@ -40,7 +42,15 @@ const TIME_SLOTS = [
 ];
 
 export default function MakeReservationScreen() {
-  const dispatch = useDispatch();
+  return (
+    <RouteGuard allowedRoles={['customer']}>
+      <MakeReservationContent />
+    </RouteGuard>
+  );
+}
+
+function MakeReservationContent() {
+  const dispatch = useAppDispatch();
   const { user } = useAuth();
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
@@ -54,6 +64,28 @@ export default function MakeReservationScreen() {
   const [isFormValid, setFormValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Redirect business users away from this screen
+  useEffect(() => {
+    if (user?.role === 'business') {
+      // Redirect to business dashboard
+      router.replace('/');
+    }
+  }, [user]);
+
+  // Return early if user is a business owner
+  if (user?.role === 'business') {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator 
+          size="large" 
+          color="#4A00E0" 
+          animating={true}
+        />
+        <Text style={{ marginTop: 16 }}>Redirecting...</Text>
+      </View>
+    );
+  }
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
@@ -91,6 +123,18 @@ export default function MakeReservationScreen() {
     return valid;
   };
 
+  // Get businessId from URL params
+  const params = useLocalSearchParams();
+  const businessId = typeof params.businessId === 'string' ? params.businessId : '';
+
+  const handleDateSelect = (day: { dateString: string }) => {
+    setSelectedDate(day.dateString);
+  };
+
+  const handleTimeSelect = (time: string) => {
+    setSelectedTime(time);
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       return;
@@ -101,36 +145,34 @@ export default function MakeReservationScreen() {
       return;
     }
 
-    const newReservation = {
-      name,
+    // Create reservation with correct type
+    const newReservation: Omit<Reservation, 'id' | 'userId' | 'createdAt'> = {
+      customerName: name,
       date: selectedDate,
       time: selectedTime,
       notes,
+      businessId: businessId || '',
+      status: 'pending' as const,
+      updatedAt: new Date().toISOString(),
+      customerId: user.id
     };
 
     try {
       setIsLoading(true);
-      await dispatch(addReservationAsync({ reservation: newReservation, userId: user.id })).unwrap();
+      await dispatch(addReservationAsync({ 
+        reservation: newReservation, 
+        userId: user.id 
+      }));
       setShowSuccess(true);
-      // Wait for 1.5 seconds to show the success message before navigating back
       setTimeout(() => {
         router.back();
       }, 1500);
     } catch (error) {
       console.error('Failed to add reservation:', error);
-      // Show error in the existing error text area
       setNameError('Failed to save reservation. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDateSelect = day => {
-    setSelectedDate(day.dateString);
-  };
-
-  const handleTimeSelect = time => {
-    setSelectedTime(time);
   };
 
   return (
@@ -177,7 +219,7 @@ export default function MakeReservationScreen() {
             <Surface style={styles.calendarContainer} elevation={1}>
               <Calendar
                 minDate={today}
-                onDayPress={day => {
+                onDayPress={(day: { dateString: string }) => {
                   handleDateSelect(day);
                   setCalendarVisible(false);
                 }}
@@ -239,13 +281,10 @@ export default function MakeReservationScreen() {
             mode="contained"
             onPress={handleSubmit}
             style={styles.submitButton}
-            contentStyle={styles.buttonContent}
-            labelStyle={styles.buttonLabel}
             loading={isLoading}
-            disabled={!isFormValid || isLoading}
-            buttonColor="#4A00E0"
+            disabled={isLoading}
           >
-            {isLoading ? 'Saving...' : 'Submit Reservation'}
+            Make Reservation
           </Button>
 
           <Button
@@ -350,5 +389,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     backgroundColor: '#4CAF50',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

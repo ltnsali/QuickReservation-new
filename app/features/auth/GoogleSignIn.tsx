@@ -18,6 +18,8 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }
     redirectUri: makeRedirectUri({
       scheme: 'qreserv'
     }),
+    // Add additional scopes if needed
+    scopes: ['profile', 'email']
   });
 
   useEffect(() => {
@@ -72,7 +74,8 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }
     setError(null);
     try {
       if (Platform.OS === 'web') {
-        onSignIn(null);
+        // Web sign-in is handled by the parent component
+        return;
       } else {
         await promptAsync();
       }
@@ -96,7 +99,11 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }
       >
         <View style={styles.buttonContent}>
           {isLoading ? (
-            <ActivityIndicator color="#757575" />
+            <ActivityIndicator 
+              color="#757575" 
+              size="small"
+              animating={true}
+            />
           ) : (
             <>
               <Image

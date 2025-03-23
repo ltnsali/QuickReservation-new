@@ -2,16 +2,61 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isBusinessOwner(businessId) {
+      let business = get(/databases/$(database)/documents/businesses/$(businessId));
+      return business != null && business.data.ownerId == request.auth.uid;
+    }
+
     // Users collection rules
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
     }
     
     // Reservations collection rules
     match /reservations/{reservationId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow customers to read their own reservations
+      allow read: if isSignedIn() && (
+        resource.data.customerId == request.auth.uid ||
+        isBusinessOwner(resource.data.businessId)
+      );
+      
+      // Allow customers to create reservations
+      allow create: if isSignedIn() && 
+        request.resource.data.customerId == request.auth.uid;
+      
+      // Allow updates by the customer who owns the reservation
+      // or by the business that owns the reservation
+      allow update: if isSignedIn() && (
+        resource.data.customerId == request.auth.uid ||
+        isBusinessOwner(resource.data.businessId)
+      );
+      
+      // Allow deletion by both customer and business owner
+      allow delete: if isSignedIn() && (
+        resource.data.customerId == request.auth.uid ||
+        isBusinessOwner(resource.data.businessId)
+      );
+    }
+    
+    // Businesses collection rules
+    match /businesses/{businessId} {
+      // Anyone can read business details
+      allow read: if isSignedIn();
+      
+      // Only business owner can create/update their business
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
   }
-} 
+}

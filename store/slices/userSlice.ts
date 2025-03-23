@@ -1,23 +1,55 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { saveUserToFirestore, loadUserFromFirestore } from '../../firebase/users';
+import { saveUserToFirestore, loadUserFromFirestore, saveBusinessToFirestore, loadBusinessFromFirestore } from '../../firebase/users';
 
 export interface User {
   id: string;
   email: string;
   name: string;
   photo?: string;
+  role: 'customer' | 'business';
   createdAt: string;
   lastLoginAt: string;
 }
 
+export interface Business {
+  id: string;
+  ownerId: string; // connects to the User id
+  name: string;
+  description?: string;
+  category?: string;
+  address?: string;
+  phone?: string;
+  website?: string;
+  photo?: string;
+  services?: Array<{
+    id: string;
+    name: string;
+    duration: number;
+    price?: number;
+  }>;
+  operatingHours?: {
+    monday?: { open: string; close: string; isOpen: boolean };
+    tuesday?: { open: string; close: string; isOpen: boolean };
+    wednesday?: { open: string; close: string; isOpen: boolean };
+    thursday?: { open: string; close: string; isOpen: boolean };
+    friday?: { open: string; close: string; isOpen: boolean };
+    saturday?: { open: string; close: string; isOpen: boolean };
+    sunday?: { open: string; close: string; isOpen: boolean };
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface UserState {
   currentUser: User | null;
+  currentBusiness: Business | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: UserState = {
   currentUser: null,
+  currentBusiness: null,
   loading: false,
   error: null,
 };
@@ -41,12 +73,32 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
+export const createOrUpdateBusiness = createAsyncThunk(
+  'user/createOrUpdateBusiness',
+  async (businessData: Omit<Business, 'createdAt' | 'updatedAt'>) => {
+    const business = await saveBusinessToFirestore({
+      ...businessData,
+      updatedAt: new Date().toISOString(),
+    });
+    return business;
+  }
+);
+
+export const fetchBusiness = createAsyncThunk(
+  'user/fetchBusiness',
+  async (ownerId: string) => {
+    const business = await loadBusinessFromFirestore(ownerId);
+    return business;
+  }
+);
+
 const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
     clearUser: (state) => {
       state.currentUser = null;
+      state.currentBusiness = null;
       state.error = null;
     },
   },
@@ -77,9 +129,35 @@ const userSlice = createSlice({
       .addCase(fetchUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch user data';
+      })
+      // Create or Update Business
+      .addCase(createOrUpdateBusiness.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createOrUpdateBusiness.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentBusiness = action.payload;
+      })
+      .addCase(createOrUpdateBusiness.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to save business data';
+      })
+      // Fetch Business
+      .addCase(fetchBusiness.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchBusiness.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentBusiness = action.payload;
+      })
+      .addCase(fetchBusiness.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch business data';
       });
   },
 });
 
 export const { clearUser } = userSlice.actions;
-export default userSlice.reducer; 
+export default userSlice.reducer;

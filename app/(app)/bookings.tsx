@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform } from 'react-native';
 import {
   Text,
   Surface,
@@ -32,7 +32,11 @@ export default function BookingsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4A00E0" />
+        <ActivityIndicator 
+          size="large" 
+          color="#4A00E0" 
+          animating={true}
+        />
       </View>
     );
   }
@@ -44,6 +48,14 @@ export default function BookingsScreen() {
         <Text variant="titleMedium" style={styles.errorText}>
           {error}
         </Text>
+        <Button 
+          mode="contained" 
+          onPress={() => user && dispatch(fetchReservations(user.id))}
+          style={{ marginTop: 20 }}
+          buttonColor="#4A00E0"
+        >
+          Try Again
+        </Button>
       </View>
     );
   }
@@ -88,7 +100,7 @@ export default function BookingsScreen() {
                 <View style={styles.cardHeaderLeft}>
                   <MaterialCommunityIcons name="account" size={24} color="#4A00E0" />
                   <Text variant="titleMedium" style={styles.nameText}>
-                    {reservation.name}
+                    {reservation.customerName}
                   </Text>
                 </View>
                 <IconButton

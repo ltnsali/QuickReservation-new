@@ -7,12 +7,18 @@ import {
 
 export interface Reservation {
   id: string;
-  userId: string;
-  name: string;
+  userId?: string; // For backward compatibility with app code
+  customerId: string;
+  customerName: string;
+  businessId: string;
   date: string;
   time: string;
-  notes: string;
+  notes?: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   createdAt: string;
+  updatedAt: string;
+  serviceId?: string;
+  serviceName?: string;
 }
 
 interface ReservationState {
@@ -30,18 +36,32 @@ const initialState: ReservationState = {
 // Async thunks for Firestore operations
 export const fetchReservations = createAsyncThunk(
   'reservations/fetchReservations',
-  async (userId: string) => {
-    const reservations = await loadReservationsFromFirestore(userId);
-    return reservations;
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      if (!userId) {
+        return rejectWithValue('User ID is required to fetch reservations');
+      }
+      const reservations = await loadReservationsFromFirestore(userId);
+      return reservations;
+    } catch (error) {
+      console.error('Error in fetchReservations thunk:', error);
+      return rejectWithValue(
+        error instanceof Error 
+          ? error.message 
+          : 'Failed to load reservations. Please try again.'
+      );
+    }
   }
 );
 
 export const addReservationAsync = createAsyncThunk(
   'reservations/addReservation',
   async ({ reservation, userId }: { reservation: Omit<Reservation, 'id' | 'userId' | 'createdAt'>, userId: string }) => {
+    // Add required fields for Firestore schema
     const reservationData = {
       ...reservation,
-      userId,
+      userId, // Will be converted to customerId in saveReservationToFirestore
+      businessId: reservation.businessId || '', // Make sure businessId is included
       createdAt: new Date().toISOString()
     };
     const savedReservation = await saveReservationToFirestore(reservationData);
@@ -74,7 +94,7 @@ const reservationSlice = createSlice({
       })
       .addCase(fetchReservations.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Failed to fetch reservations';
+        state.error = action.payload as string || 'Failed to fetch reservations';
       })
       // Add reservation
       .addCase(addReservationAsync.pending, state => {
