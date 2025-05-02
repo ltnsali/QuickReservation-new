@@ -94,35 +94,32 @@ export default function AppLayout() {
             href: null, // This prevents it from showing in the tab bar
           }}
         />
-        
-        <Tabs.Screen
+          <Tabs.Screen
           name="business-reservations"
           options={{
             title: 'Reservations',
             tabBarIcon: ({ color }) => (
               <MaterialCommunityIcons name="calendar-multiple-check" size={26} color={color} />
             ),
-            href: isBusinessOwner ? null : null,
+            href: isBusinessOwner ? undefined : null, // Show for business owners, hide for regular users
           }}
-        />
-        <Tabs.Screen
+        />        <Tabs.Screen
           name="bookings"
           options={{
             title: 'My Bookings',
             tabBarIcon: ({ color }) => (
               <MaterialCommunityIcons name="calendar-check" size={26} color={color} />
             ),
-            href: isBusinessOwner ? null : null,
+            href: isBusinessOwner ? null : undefined, // Hide for business owners, show for regular users
           }}
-        />
-        <Tabs.Screen
+        />        <Tabs.Screen
           name="make-reservation"
           options={{
             title: 'Reserve',
             tabBarIcon: ({ color }) => (
               <MaterialCommunityIcons name="calendar-plus" size={26} color={color} />
             ),
-            href: isBusinessOwner ? null : null,
+            href: isBusinessOwner ? null : undefined, // Hide for business owners, show for regular users
           }}
         />
         <Tabs.Screen
