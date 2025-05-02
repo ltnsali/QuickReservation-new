@@ -1,6 +1,5 @@
 import { View, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { Text, Surface, Button, Card, Divider } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../features/auth/AuthContext';
@@ -25,15 +24,6 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#4A00E0', '#8E2DE2']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <MaterialCommunityIcons name="view-dashboard" size={32} color="white" />
-          <Text variant="headlineMedium" style={styles.headerTitle}>
-            Business Dashboard
-          </Text>
-        </View>
-      </LinearGradient>
-
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         <Card style={styles.welcomeCard}>
           <Card.Content>
@@ -96,26 +86,23 @@ export default function DashboardScreen() {
               <Text style={styles.infoText}>
                 {currentBusiness.address || 'No address added'}
               </Text>
+            </View>              <View style={styles.infoItem}>
+              <MaterialCommunityIcons name="clock-outline" size={22} color="#666" />
+              <Text style={styles.infoText}>
+                {'Hours: Check business profile for details'}
+              </Text>
             </View>
-
-            {currentBusiness.website && (
-              <View style={styles.infoItem}>
-                <MaterialCommunityIcons name="web" size={22} color="#666" />
-                <Text style={styles.infoText}>
-                  {currentBusiness.website}
-                </Text>
-              </View>
-            )}
-
+          </Card.Content>
+          <Card.Actions>
             <Button 
-              mode="text" 
-              icon="pencil" 
-              onPress={() => router.push('/business-edit')}
-              style={styles.editButton}
+              mode="outlined" 
+              onPress={() => router.push('/profile?tab=business')}
+              style={styles.actionButton}
+              textColor="#4A00E0"
             >
               Edit Information
             </Button>
-          </Card.Content>
+          </Card.Actions>
         </Card>
       </ScrollView>
     </View>
@@ -126,20 +113,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-  },
-  header: {
-    height: 120,
-    justifyContent: 'flex-end',
-    padding: 16,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerTitle: {
-    color: 'white',
-    fontWeight: 'bold',
   },
   content: {
     flex: 1,
@@ -191,14 +164,10 @@ const styles = StyleSheet.create({
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
     marginBottom: 12,
   },
   infoText: {
-    flex: 1,
-    color: '#333',
-  },
-  editButton: {
-    marginTop: 8,
+    marginLeft: 12,
+    color: '#444',
   },
 });

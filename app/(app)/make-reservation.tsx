@@ -13,7 +13,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAppDispatch } from '../../store/hooks';
 import { addReservationAsync } from '../../store/slices/reservationSlice';
 import { Calendar } from 'react-native-calendars';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../features/auth/AuthContext';
 import { RouteGuard } from '../utils/RouteGuard';
@@ -174,18 +174,8 @@ function MakeReservationContent() {
       setIsLoading(false);
     }
   };
-
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#4A00E0', '#8E2DE2']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <MaterialCommunityIcons name="calendar-plus" size={32} color="white" />
-          <Text variant="headlineMedium" style={styles.headerTitle}>
-            Make Reservation
-          </Text>
-        </View>
-      </LinearGradient>
-
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         <Surface style={styles.formContainer} elevation={2}>
           <TextInput

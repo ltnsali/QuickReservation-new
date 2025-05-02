@@ -1,6 +1,6 @@
 import { View, StyleSheet, Image, ScrollView } from 'react-native';
 import { Text, Button, Surface, Divider, Card } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../features/auth/AuthContext';
@@ -17,17 +17,8 @@ export default function ProfileScreen() {
   if (!user) {
     return null;
   }
-
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#4A00E0', '#8E2DE2']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <MaterialCommunityIcons name="account-circle" size={32} color="white" />
-          <Text variant="headlineMedium" style={styles.headerTitle}>
-            Profile
-          </Text>
-        </View>
-      </LinearGradient>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         <Surface style={styles.profileCard} elevation={2}>

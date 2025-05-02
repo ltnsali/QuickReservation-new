@@ -9,7 +9,7 @@ import {
   Dialog,
   Button,
 } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { fetchReservations, deleteReservationAsync } from '../../store/slices/reservationSlice';
@@ -72,18 +72,8 @@ export default function BookingsScreen() {
       setSelectedReservation(null);
     }
   };
-
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#4A00E0', '#8E2DE2']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <MaterialCommunityIcons name="calendar-multiple" size={32} color="white" />
-          <Text variant="headlineMedium" style={styles.headerTitle}>
-            My Bookings
-          </Text>
-        </View>
-      </LinearGradient>
-
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         {reservations.length === 0 ? (
           <View style={styles.emptyContainer}>

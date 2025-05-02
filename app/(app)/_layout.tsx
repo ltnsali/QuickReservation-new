@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, usePathname } from 'expo-router';
 import { Platform, StatusBar, View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Text, Surface, Avatar, Menu, Badge } from 'react-native-paper';
@@ -17,6 +17,7 @@ export default function AppLayout() {
   const { user, signOut } = useAuth();
   const [menuVisible, setMenuVisible] = React.useState(false);
   const { currentBusiness } = useAppSelector(state => state.user);
+  const pathname = usePathname();
   
   // If user is not authenticated, redirect to auth
   if (!user) {
@@ -25,42 +26,75 @@ export default function AppLayout() {
 
   // Determine if user is a business owner
   const isBusinessOwner = user.role === 'business';
+  
+  // Get the current screen title based on pathname
+  const getCurrentScreenTitle = () => {
+    const route = pathname.split('/').pop() || 'index';
+    
+    switch (route) {
+      case 'index':
+        return isBusinessOwner ? 'Dashboard' : 'Home';
+      case 'dashboard':
+        return 'Dashboard';
+      case 'business-reservations':
+        return 'Reservations';
+      case 'bookings':
+        return 'My Bookings';
+      case 'make-reservation':
+        return 'Make a Reservation';
+      case 'profile':
+        return 'Profile';
+      default:
+        return '';
+    }
+  };
 
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#4A00E0" translucent={true} />
       <View style={styles.header}>
-        <HeaderTitle />
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={
-            <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.profileButton}>
-              <View>
-                {user && <UserAvatar user={user} size={40} />}
-                {isBusinessOwner && <Badge style={styles.businessBadge}>B</Badge>}
-              </View>
-            </TouchableOpacity>
-          }
-        >
-          <Menu.Item leadingIcon="account" title={user.name} style={styles.menuItem} />
-          <Menu.Item leadingIcon="email" title={user.email} style={styles.menuItem} />
-          {isBusinessOwner && currentBusiness && (
-            <Menu.Item 
-              leadingIcon="store" 
-              title={`${currentBusiness.name} (Business)`}
-              style={styles.menuItem}
+        <View style={styles.headerLeft}>
+          <HeaderTitle />
+        </View>
+        
+        <View style={styles.headerCenter}>
+          <Text style={styles.screenTitle}>
+            {getCurrentScreenTitle()}
+          </Text>
+        </View>
+        
+        <View style={styles.headerRight}>
+          <Menu
+            visible={menuVisible}
+            onDismiss={() => setMenuVisible(false)}
+            anchor={
+              <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.profileButton}>
+                <View>
+                  {user && <UserAvatar user={user} size={40} />}
+                  {isBusinessOwner && <Badge style={styles.businessBadge}>B</Badge>}
+                </View>
+              </TouchableOpacity>
+            }
+          >
+            <Menu.Item leadingIcon="account" title={user.name} style={styles.menuItem} />
+            <Menu.Item leadingIcon="email" title={user.email} style={styles.menuItem} />
+            {isBusinessOwner && currentBusiness && (
+              <Menu.Item 
+                leadingIcon="store" 
+                title={`${currentBusiness.name} (Business)`}
+                style={styles.menuItem}
+              />
+            )}
+            <Menu.Item
+              leadingIcon="logout"
+              onPress={() => {
+                setMenuVisible(false);
+                signOut();
+              }}
+              title="Sign Out"
             />
-          )}
-          <Menu.Item
-            leadingIcon="logout"
-            onPress={() => {
-              setMenuVisible(false);
-              signOut();
-            }}
-            title="Sign Out"
-          />
-        </Menu>
+          </Menu>
+        </View>
       </View>
       
       <Tabs
@@ -145,6 +179,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
+  },
+  headerLeft: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  headerCenter: {
+    flex: 2,
+    alignItems: 'center',
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  screenTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   profileButton: {
     marginLeft: 8,

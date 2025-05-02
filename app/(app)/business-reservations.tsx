@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Platform } from 'react-native';
 import { Text, Card, Chip, Button, Menu, Divider, ActivityIndicator, FAB, SegmentedButtons } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../features/auth/AuthContext';
 import { useAppSelector } from '../../store/hooks';
@@ -110,18 +110,8 @@ export default function BusinessReservationsScreen() {
       </View>
     );
   }
-
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#4A00E0', '#8E2DE2']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <MaterialCommunityIcons name="calendar-multiple-check" size={32} color="white" />
-          <Text variant="headlineMedium" style={styles.headerTitle}>
-            Reservations
-          </Text>
-        </View>
-      </LinearGradient>
-      
       <View style={styles.filterContainer}>
         <SegmentedButtons
           value={statusFilter}
