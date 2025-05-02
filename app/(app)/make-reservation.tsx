@@ -1,4 +1,4 @@
-import { View, ScrollView, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import {
   Text,
   Button,
@@ -7,6 +7,10 @@ import {
   Surface,
   ActivityIndicator,
   Snackbar,
+  Card,
+  Searchbar,
+  Divider,
+  List
 } from 'react-native-paper';
 import { useState, useCallback, useEffect } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -18,6 +22,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../features/auth/AuthContext';
 import { RouteGuard } from '../utils/RouteGuard';
 import type { Reservation } from '../../firebase/firestore';
+import { Business } from '../../store/slices/userSlice';
+import { getAllBusinesses } from '../../firebase/users';
 
 // Available time slots
 const TIME_SLOTS = [
@@ -64,6 +70,13 @@ function MakeReservationContent() {
   const [isFormValid, setFormValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  // New states for business selection
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+  const [businessLoading, setBusinessLoading] = useState(true);
+  const [businessError, setBusinessError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Redirect business users away from this screen
   useEffect(() => {
@@ -72,6 +85,39 @@ function MakeReservationContent() {
       router.replace('/');
     }
   }, [user]);
+
+  // Fetch all businesses
+  useEffect(() => {
+    const fetchBusinesses = async () => {
+      try {
+        setBusinessLoading(true);
+        const businessList = await getAllBusinesses();
+        setBusinesses(businessList);
+        setBusinessError(null);
+      } catch (error) {
+        console.error('Failed to load businesses:', error);
+        setBusinessError('Failed to load businesses. Please try again.');
+      } finally {
+        setBusinessLoading(false);
+      }
+    };
+
+    fetchBusinesses();
+  }, []);
+
+  // Get businessId from URL params
+  const params = useLocalSearchParams();
+  const businessIdFromParams = typeof params.businessId === 'string' ? params.businessId : '';
+  
+  // If businessId is provided in URL, try to find and select that business
+  useEffect(() => {
+    if (businessIdFromParams && businesses.length > 0) {
+      const business = businesses.find(b => b.id === businessIdFromParams);
+      if (business) {
+        setSelectedBusiness(business);
+      }
+    }
+  }, [businessIdFromParams, businesses]);
 
   // Return early if user is a business owner
   if (user?.role === 'business') {
@@ -94,6 +140,15 @@ function MakeReservationContent() {
   const markedDates = {
     [selectedDate]: { selected: true, selectedColor: '#6200ee' },
   };
+
+  // Filter businesses based on search query
+  const filteredBusinesses = searchQuery 
+    ? businesses.filter(business => 
+        business.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (business.category && business.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (business.description && business.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : businesses;
 
   // Update form validity whenever inputs change
   useEffect(() => {
@@ -123,16 +178,28 @@ function MakeReservationContent() {
     return valid;
   };
 
-  // Get businessId from URL params
-  const params = useLocalSearchParams();
-  const businessId = typeof params.businessId === 'string' ? params.businessId : '';
-
   const handleDateSelect = (day: { dateString: string }) => {
     setSelectedDate(day.dateString);
   };
 
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time);
+  };
+
+  const handleBusinessSelect = (business: Business) => {
+    setSelectedBusiness(business);
+  };
+
+  const handleBackToBusinesses = () => {
+    setSelectedBusiness(null);
+    // Reset form fields when going back to business selection
+    setName('');
+    setNotes('');
+    setSelectedDate('');
+    setSelectedTime('');
+    setNameError('');
+    setDateError('');
+    setTimeError('');
   };
 
   const handleSubmit = async () => {
@@ -145,13 +212,18 @@ function MakeReservationContent() {
       return;
     }
 
+    if (!selectedBusiness) {
+      setNameError('You must select a business for your reservation');
+      return;
+    }
+
     // Create reservation with correct type
     const newReservation: Omit<Reservation, 'id' | 'userId' | 'createdAt'> = {
       customerName: name,
       date: selectedDate,
       time: selectedTime,
       notes,
-      businessId: businessId || '',
+      businessId: selectedBusiness.id,
       status: 'pending' as const,
       updatedAt: new Date().toISOString(),
       customerId: user.id
@@ -174,9 +246,157 @@ function MakeReservationContent() {
       setIsLoading(false);
     }
   };
+
+  // If a business is not selected, show business selection UI
+  if (!selectedBusiness) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text variant="headlineMedium" style={styles.headerTitle}>
+            Select a Business
+          </Text>
+        </View>
+        <View style={styles.searchContainer}>
+          <Searchbar
+            placeholder="Search businesses by name or category"
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchbar}
+            iconColor="#4A00E0"
+          />
+        </View>
+        
+        {businessLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4A00E0" animating={true} />
+            <Text style={{ marginTop: 16 }}>Loading businesses...</Text>
+          </View>
+        ) : businessError ? (
+          <View style={styles.errorContainer}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="#ff5252" />
+            <Text style={styles.errorText}>{businessError}</Text>            <Button 
+              mode="contained" 
+              onPress={() => {
+                setBusinessLoading(true);
+                getAllBusinesses()
+                  .then(businesses => {
+                    setBusinesses(businesses);
+                    setBusinessError(null);
+                  })
+                  .catch(error => {
+                    console.error('Failed to load businesses:', error);
+                    setBusinessError('Failed to load businesses. Please try again.');
+                  })
+                  .finally(() => setBusinessLoading(false));
+              }} 
+              style={{ marginTop: 16 }}
+            >
+              Try Again
+            </Button>
+          </View>
+        ) : filteredBusinesses.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons name="store-search" size={48} color="#4A00E0" />
+            <Text style={styles.emptyText}>
+              No businesses found
+            </Text>
+            {searchQuery ? (
+              <Text style={styles.emptySubText}>
+                Try a different search term
+              </Text>
+            ) : (
+              <Text style={styles.emptySubText}>
+                There are no registered businesses yet
+              </Text>
+            )}
+          </View>
+        ) : (
+          <ScrollView style={styles.content} contentContainerStyle={styles.businessesContent}>
+            {filteredBusinesses.map(business => (
+              <Card 
+                key={business.id} 
+                style={styles.businessCard}
+                onPress={() => handleBusinessSelect(business)}
+              >
+                <Card.Content>
+                  <Text variant="titleLarge" style={styles.businessName}>
+                    {business.name}
+                  </Text>
+                  
+                  {business.category && (
+                    <Chip style={styles.categoryChip} icon="tag">
+                      {business.category}
+                    </Chip>
+                  )}
+                  
+                  {business.description && (
+                    <Text variant="bodyMedium" style={styles.businessDescription}>
+                      {business.description}
+                    </Text>
+                  )}
+                  
+                  <Divider style={styles.divider} />
+                  
+                  {business.address && (
+                    <List.Item
+                      title="Address"
+                      description={business.address}
+                      left={props => <List.Icon {...props} icon="map-marker" color="#4A00E0" />}
+                    />
+                  )}
+                  
+                  {business.phone && (
+                    <List.Item
+                      title="Phone"
+                      description={business.phone}
+                      left={props => <List.Icon {...props} icon="phone" color="#4A00E0" />}
+                    />
+                  )}
+                </Card.Content>
+                <Card.Actions>
+                  <Button 
+                    mode="contained" 
+                    onPress={() => handleBusinessSelect(business)}
+                    style={styles.selectButton}
+                  >
+                    Select & Reserve
+                  </Button>
+                </Card.Actions>
+              </Card>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+    );
+  }
+
+  // If a business is selected, show reservation form
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+        <Surface style={styles.businessInfoCard} elevation={2}>
+          <View style={styles.businessHeader}>
+            <View style={styles.businessHeaderInfo}>
+              <Text variant="titleMedium" style={styles.businessInfoName}>
+                {selectedBusiness.name}
+              </Text>
+              {selectedBusiness.category && (
+                <Text variant="bodySmall" style={styles.businessInfoCategory}>
+                  {selectedBusiness.category}
+                </Text>
+              )}
+            </View>
+            <Button 
+              mode="text" 
+              icon="arrow-left" 
+              onPress={handleBackToBusinesses}
+              textColor="#4A00E0"
+            >
+              Change
+            </Button>
+          </View>
+        </Surface>
+
         <Surface style={styles.formContainer} elevation={2}>
           <TextInput
             label="Full Name"
@@ -307,6 +527,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
+    backgroundColor: '#4A00E0',
     paddingVertical: 24,
     paddingHorizontal: 16,
   },
@@ -317,7 +538,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: 'white',
-    marginLeft: 12,
+    textAlign: 'center',
     fontWeight: 'bold',
   },
   content: {
@@ -326,6 +547,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 32,
+  },
+  businessesContent: {
+    padding: 16,
+    paddingBottom: 32,
+    gap: 16,
   },
   formContainer: {
     padding: 16,
@@ -383,5 +609,88 @@ const styles = StyleSheet.create({
   loadingContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    flex: 1,
   },
+  searchContainer: {
+    padding: 16,
+    backgroundColor: '#4A00E0',
+    paddingTop: 0,
+    paddingBottom: 16
+  },
+  searchbar: {
+    elevation: 2,
+    borderRadius: 8,
+  },
+  businessCard: {
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  businessName: {
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  categoryChip: {
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+    backgroundColor: '#E1D9FF',
+  },
+  businessDescription: {
+    marginBottom: 16,
+    color: '#555',
+  },
+  selectButton: {
+    flex: 1,
+    marginHorizontal: 8,
+    borderRadius: 8,
+  },
+  divider: {
+    marginVertical: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+    color: '#333',
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  businessInfoCard: {
+    marginBottom: 16,
+    borderRadius: 12,
+    backgroundColor: 'white',
+  },
+  businessHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  businessHeaderInfo: {
+    flex: 1,
+  },
+  businessInfoName: {
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  businessInfoCategory: {
+    color: '#666',
+    marginTop: 4,
+  }
 });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Platform } from 'react-native';
-import { Text, Card, Chip, Button, Menu, Divider, ActivityIndicator, FAB, SegmentedButtons } from 'react-native-paper';
+import { Text, Card, Chip, Button, Menu, Divider, ActivityIndicator, FAB, SegmentedButtons, Snackbar, IconButton } from 'react-native-paper';
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../features/auth/AuthContext';
@@ -16,6 +16,9 @@ export default function BusinessReservationsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [error, setError] = useState<string | null>(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarColor, setSnackbarColor] = useState('#4CAF50'); // Default green
 
   // Filter reservations based on status
   const filteredReservations = statusFilter === 'all'
@@ -69,10 +72,37 @@ export default function BusinessReservationsScreen() {
         res.id === id ? { ...res, status: newStatus } : res
       ));
       
-      toggleMenu(id);
+      // Close the menu if it's open
+      if (menuVisible[id]) {
+        toggleMenu(id);
+      }
+
+      // Show snackbar with appropriate message and color
+      let message = '';
+      let color = '';
+      switch (newStatus) {
+        case 'confirmed':
+          message = 'Appointment approved successfully!';
+          color = '#4CAF50'; // Green
+          break;
+        case 'completed':
+          message = 'Appointment marked as completed!';
+          color = '#2196F3'; // Blue
+          break;
+        case 'cancelled':
+          message = 'Appointment cancelled!';
+          color = '#F44336'; // Red
+          break;
+      }
+      
+      setSnackbarMessage(message);
+      setSnackbarColor(color);
+      setSnackbarVisible(true);
     } catch (err) {
       console.error('Error updating reservation status:', err);
-      // Show error to user
+      setSnackbarMessage('Failed to update appointment status');
+      setSnackbarColor('#F44336'); // Red for error
+      setSnackbarVisible(true);
     }
   };
   
@@ -254,6 +284,52 @@ export default function BusinessReservationsScreen() {
                     </View>
                   )}
                 </View>
+
+                {/* Add quick action buttons for pending reservations */}
+                {reservation.status === 'pending' && (
+                  <View style={styles.actionButtonsContainer}>
+                    <Button
+                      mode="contained"
+                      icon="check-circle"
+                      onPress={() => updateReservationStatus(reservation.id, 'confirmed')}
+                      style={styles.approveButton}
+                      contentStyle={styles.actionButtonContent}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      mode="outlined"
+                      icon="cancel"
+                      onPress={() => updateReservationStatus(reservation.id, 'cancelled')}
+                      style={styles.rejectButton}
+                      contentStyle={styles.actionButtonContent}
+                      textColor="#F44336"
+                    >
+                      Reject
+                    </Button>
+                  </View>
+                )}
+
+                {/* Add status action buttons for confirmed reservations */}
+                {reservation.status === 'confirmed' && (
+                  <View style={styles.actionButtonsContainer}>
+                    <Button
+                      mode="contained"
+                      icon="check-all"
+                      onPress={() => updateReservationStatus(reservation.id, 'completed')}
+                      style={styles.completeButton}
+                      contentStyle={styles.actionButtonContent}
+                    >
+                      Mark Complete
+                    </Button>
+                    <IconButton
+                      icon="cancel"
+                      mode="outlined"
+                      iconColor="#F44336"
+                      onPress={() => updateReservationStatus(reservation.id, 'cancelled')}
+                    />
+                  </View>
+                )}
               </Card.Content>
             </Card>
           ))
@@ -269,6 +345,20 @@ export default function BusinessReservationsScreen() {
         label="Add Manual"
         uppercase={false}
       />
+
+      {/* Snackbar for status updates */}
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        style={{ backgroundColor: snackbarColor }}
+        action={{
+          label: 'OK',
+          onPress: () => setSnackbarVisible(false),
+        }}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </View>
   );
 }
@@ -349,6 +439,7 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     marginTop: 8,
+    marginBottom: 16,
   },
   detailItem: {
     flexDirection: 'row',
@@ -359,6 +450,32 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 15,
     color: '#444',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  approveButton: {
+    flex: 1,
+    marginRight: 8,
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+  },
+  rejectButton: {
+    flex: 1,
+    marginLeft: 8,
+    borderColor: '#F44336',
+    borderRadius: 8,
+  },
+  completeButton: {
+    flex: 1,
+    marginRight: 8,
+    backgroundColor: '#2196F3',
+    borderRadius: 8,
+  },
+  actionButtonContent: {
+    height: 40,
   },
   emptyCard: {
     borderRadius: 12,
