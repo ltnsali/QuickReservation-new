@@ -2,12 +2,55 @@ import { View, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react
 import { Text, Surface, Button, Card, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 import { useAppSelector } from '../../store/hooks';
+import { getBusinessReservations, Reservation } from '../../firebase/firestore';
 
 export default function DashboardScreen() {
   const { user } = useAuth();
   const { currentBusiness } = useAppSelector(state => state.user);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fetch business reservations
+  useEffect(() => {
+    const loadReservations = async () => {
+      if (!currentBusiness?.id) return;
+      
+      try {
+        setLoading(true);
+        const data = await getBusinessReservations(currentBusiness.id);
+        setReservations(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load reservations:', err);
+        setError('Failed to load reservation data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (currentBusiness?.id) {
+      loadReservations();
+    }
+  }, [currentBusiness]);
+  
+  // Calculate booking statistics
+  const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+  
+  const todayBookings = reservations.filter(res => 
+    res.date === today && res.status !== 'cancelled'
+  ).length;
+  
+  const pendingBookings = reservations.filter(res => 
+    res.status === 'pending'
+  ).length;
+  
+  const totalActiveBookings = reservations.filter(res => 
+    res.status !== 'cancelled'
+  ).length;
   
   // If not a business user or no business data, render a placeholder
   if (!user || user.role !== 'business' || !currentBusiness) {
@@ -42,15 +85,15 @@ export default function DashboardScreen() {
 
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>0</Text>
+                <Text style={styles.statValue}>{loading ? '...' : todayBookings}</Text>
                 <Text style={styles.statLabel}>Today's Bookings</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>0</Text>
+                <Text style={styles.statValue}>{loading ? '...' : pendingBookings}</Text>
                 <Text style={styles.statLabel}>Pending</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>0</Text>
+                <Text style={styles.statValue}>{loading ? '...' : totalActiveBookings}</Text>
                 <Text style={styles.statLabel}>Total</Text>
               </View>
             </View>

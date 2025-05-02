@@ -1,18 +1,68 @@
 import { View, StyleSheet, Image, ScrollView } from 'react-native';
-import { Text, Button, Surface, Divider, Card } from 'react-native-paper';
+import { Text, Button, Surface, Divider, Card, ActivityIndicator } from 'react-native-paper';
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../features/auth/AuthContext';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { UserAvatar } from '../../components/ui/UserAvatar';
+import { getBusinessReservations, getCustomerReservations, Reservation } from '../../firebase/firestore';
+import { fetchReservations } from '../../store/slices/reservationSlice';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { currentBusiness } = useAppSelector(state => state.user);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
   
   // Determine if the user is a business owner
   const isBusinessOwner = user?.role === 'business';
+
+  useEffect(() => {
+    const loadReservations = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        let data: Reservation[] = [];
+        
+        if (isBusinessOwner && currentBusiness?.id) {
+          // For business owners, fetch all business reservations
+          data = await getBusinessReservations(currentBusiness.id);
+        } else {
+          // For customers, fetch their reservations
+          data = await getCustomerReservations(user.id);
+          
+          // Also update Redux store
+          dispatch(fetchReservations(user.id));
+        }
+        
+        setReservations(data);
+      } catch (error) {
+        console.error('Failed to load profile reservations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadReservations();
+  }, [user, currentBusiness, isBusinessOwner, dispatch]);
+
+  // Calculate statistics
+  const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+    // Business statistics
+  const totalReservations = reservations.length;
+  const activeToday = reservations.filter(res => 
+    res.date === today && res.status !== 'cancelled'
+  ).length;
+  const confirmedReservations = reservations.filter(res => res.status === 'confirmed').length;
+  const pendingReservations = reservations.filter(res => res.status === 'pending').length;
+  
+  // Customer statistics
+  const completedReservations = reservations.filter(res => res.status === 'completed').length;
+  const cancelledReservations = reservations.filter(res => res.status === 'cancelled').length;
 
   if (!user) {
     return null;
@@ -44,28 +94,31 @@ export default function ProfileScreen() {
 
           <Divider style={styles.divider} />
 
-          {isBusinessOwner ? (
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#4A00E0" />
+            </View>          ) : isBusinessOwner ? (
             // Business Owner Stats
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
                 <Text variant="bodyLarge" style={styles.statValue}>
-                  0
+                  {pendingReservations}
                 </Text>
                 <Text variant="bodyMedium" style={styles.statLabel}>
-                  Total Services
+                  Pending
                 </Text>
               </View>
               <View style={styles.statItem}>
                 <Text variant="bodyLarge" style={styles.statValue}>
-                  0
+                  {confirmedReservations}
                 </Text>
                 <Text variant="bodyMedium" style={styles.statLabel}>
-                  Total Reservations
+                  Confirmed
                 </Text>
               </View>
               <View style={styles.statItem}>
                 <Text variant="bodyLarge" style={styles.statValue}>
-                  0
+                  {activeToday}
                 </Text>
                 <Text variant="bodyMedium" style={styles.statLabel}>
                   Active Today
@@ -77,7 +130,7 @@ export default function ProfileScreen() {
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
                 <Text variant="bodyLarge" style={styles.statValue}>
-                  0
+                  {pendingReservations}
                 </Text>
                 <Text variant="bodyMedium" style={styles.statLabel}>
                   Pending
@@ -85,7 +138,7 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.statItem}>
                 <Text variant="bodyLarge" style={styles.statValue}>
-                  0
+                  {completedReservations}
                 </Text>
                 <Text variant="bodyMedium" style={styles.statLabel}>
                   Completed
@@ -93,7 +146,7 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.statItem}>
                 <Text variant="bodyLarge" style={styles.statValue}>
-                  0
+                  {cancelledReservations}
                 </Text>
                 <Text variant="bodyMedium" style={styles.statLabel}>
                   Cancelled
@@ -254,5 +307,9 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     borderColor: '#4A00E0',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
   },
 });
