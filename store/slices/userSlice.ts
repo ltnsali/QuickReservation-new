@@ -21,12 +21,6 @@ export interface Business {
   phone?: string;
   website?: string;
   photo?: string;
-  services?: Array<{
-    id: string;
-    name: string;
-    duration: number;
-    price?: number;
-  }>;
   operatingHours?: {
     monday?: { open: string; close: string; isOpen: boolean };
     tuesday?: { open: string; close: string; isOpen: boolean };

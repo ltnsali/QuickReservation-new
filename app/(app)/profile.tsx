@@ -118,14 +118,6 @@ export default function ProfileScreen() {
             <Card.Content>
               <Button
                 mode="contained"
-                icon="briefcase-edit"
-                onPress={() => router.push('/business-services')}
-                style={styles.actionButton}
-              >
-                Manage Services
-              </Button>
-              <Button
-                mode="contained"
                 icon="calendar-check"
                 onPress={() => router.push('/business-reservations')}
                 style={styles.actionButton}

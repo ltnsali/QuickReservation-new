@@ -67,13 +67,6 @@ export default function DashboardScreen() {
           </Card.Content>
           <Card.Actions>
             <Button 
-              mode="contained" 
-              onPress={() => router.push('/business-services')}
-              style={styles.actionButton}
-            >
-              Manage Services
-            </Button>
-            <Button 
               mode="outlined" 
               onPress={() => router.push('/business-reservations')}
               style={styles.actionButton}
@@ -82,44 +75,6 @@ export default function DashboardScreen() {
               View Reservations
             </Button>
           </Card.Actions>
-        </Card>
-
-        <Card style={styles.quickActionsCard}>
-          <Card.Title 
-            title="Quick Actions" 
-            left={(props) => <MaterialCommunityIcons {...props} name="lightning-bolt" size={24} color="#4A00E0" />} 
-          />
-          <Card.Content>
-            <View style={styles.quickActionButtons}>
-              <Button 
-                mode="contained-tonal" 
-                icon="clock-edit"
-                onPress={() => {}} 
-                style={[styles.quickActionButton, { backgroundColor: '#E8DEF8' }]}
-                textColor="#4A00E0"
-              >
-                Set Hours
-              </Button>
-              <Button 
-                mode="contained-tonal" 
-                icon="update"
-                onPress={() => {}} 
-                style={[styles.quickActionButton, { backgroundColor: '#F6EDFF' }]}
-                textColor="#6200EA"
-              >
-                Update Info
-              </Button>
-              <Button 
-                mode="contained-tonal" 
-                icon="message"
-                onPress={() => {}} 
-                style={[styles.quickActionButton, { backgroundColor: '#E3F4FB' }]}
-                textColor="#0277BD"
-              >
-                Messages
-              </Button>
-            </View>
-          </Card.Content>
         </Card>
 
         <Card style={styles.infoCard}>
@@ -229,19 +184,6 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginHorizontal: 4,
-  },
-  quickActionsCard: {
-    marginBottom: 16,
-  },
-  quickActionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  quickActionButton: {
-    flex: 1,
-    minWidth: '30%',
   },
   infoCard: {
     marginBottom: 16,

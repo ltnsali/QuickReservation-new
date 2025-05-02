@@ -10,8 +10,6 @@ export interface Reservation {
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
-  serviceId?: string;
-  serviceName?: string;
   date: string;
   time: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';

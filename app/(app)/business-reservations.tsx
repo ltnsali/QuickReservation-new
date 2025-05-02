@@ -243,13 +243,6 @@ export default function BusinessReservationsScreen() {
                     <Text style={styles.detailText}>{reservation.time}</Text>
                   </View>
                   
-                  {reservation.serviceName && (
-                    <View style={styles.detailItem}>
-                      <MaterialCommunityIcons name="briefcase" size={20} color="#666" />
-                      <Text style={styles.detailText}>{reservation.serviceName}</Text>
-                    </View>
-                  )}
-                  
                   {reservation.customerEmail && (
                     <View style={styles.detailItem}>
                       <MaterialCommunityIcons name="email-outline" size={20} color="#666" />

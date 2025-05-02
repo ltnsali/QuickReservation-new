@@ -96,16 +96,6 @@ export default function AppLayout() {
         />
         
         <Tabs.Screen
-          name="business-services"
-          options={{
-            title: 'Services',
-            tabBarIcon: ({ color }) => (
-              <MaterialCommunityIcons name="briefcase" size={26} color={color} />
-            ),
-            href: isBusinessOwner ? null : null,
-          }}
-        />
-        <Tabs.Screen
           name="business-reservations"
           options={{
             title: 'Reservations',
