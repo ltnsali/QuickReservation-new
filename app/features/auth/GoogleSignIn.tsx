@@ -3,22 +3,32 @@ import { View, TouchableOpacity, StyleSheet, Text, Image, ActivityIndicator, Pla
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
+import Constants from 'expo-constants';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const CLIENT_ID = '57102764070-q106sapm1qn0rh33qrgqlpjnha9hpu0r.apps.googleusercontent.com';
+// Web client ID
+const WEB_CLIENT_ID = '57102764070-q106sapm1qn0rh33qrgqlpjnha9hpu0r.apps.googleusercontent.com';
+// Android client ID
+const ANDROID_CLIENT_ID = '57102764070-jq4fglluu8tlmp5790qq91s53kismp9o.apps.googleusercontent.com';
+// Expo client ID (for Expo Go)
+const EXPO_CLIENT_ID = '57102764070-q106sapm1qn0rh33qrgqlpjnha9hpu0r.apps.googleusercontent.com';
 
 export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Only initialize auth request for mobile
+  const redirectUri = makeRedirectUri({
+    scheme: 'qreserv'
+  });
+
+  console.log('Redirect URI:', redirectUri); // This will help us debug
+
   const [request, response, promptAsync] = Platform.OS === 'web' ? [null, null, async () => {}] : Google.useAuthRequest({
-    clientId: CLIENT_ID,
-    redirectUri: makeRedirectUri({
-      scheme: 'qreserv'
-    }),
-    // Add additional scopes if needed
+    androidClientId: ANDROID_CLIENT_ID,
+    webClientId: WEB_CLIENT_ID,
+    expoClientId: EXPO_CLIENT_ID,
+    redirectUri,
     scopes: ['profile', 'email']
   });
 
