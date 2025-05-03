@@ -16,35 +16,44 @@ const EXPO_CLIENT_ID = '57102764070-q106sapm1qn0rh33qrgqlpjnha9hpu0r.apps.google
 
 export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const redirectUri = makeRedirectUri({
-    scheme: 'qreserv'
-  });
+  const [error, setError] = useState<string | null>(null);  // For Android, we'll use the default configuration that works with the package name and SHA-1
+  const redirectUri = makeRedirectUri({ scheme: 'qreserv' });
 
   console.log('Redirect URI:', redirectUri); // This will help us debug
+  console.log('Platform:', Platform.OS);
 
-  const [request, response, promptAsync] = Platform.OS === 'web' ? [null, null, async () => {}] : Google.useAuthRequest({
-    androidClientId: ANDROID_CLIENT_ID,
-    webClientId: WEB_CLIENT_ID,
-    expoClientId: EXPO_CLIENT_ID,
-    redirectUri,
-    scopes: ['profile', 'email']
-  });
+  const [request, response, promptAsync] = Platform.OS === 'web' 
+    ? [null, null, async () => {}] 
+    : Google.useAuthRequest({
+        androidClientId: ANDROID_CLIENT_ID,
+        webClientId: WEB_CLIENT_ID, // This is needed for Android too
+        expoClientId: EXPO_CLIENT_ID,
+        // For Android with expo-auth-session, we need to simplify this
+        ...(Platform.OS === 'android' ? {} : { redirectUri }),
+        scopes: ['profile', 'email']
+      });
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
       handleAuthResponse();
     }
-  }, [response]);
-
-  const handleAuthResponse = async () => {
+  }, [response]);  const handleAuthResponse = async () => {
+    console.log('Auth response received:', response);
+    
     if (response?.type === 'success') {
       setIsLoading(true);
       const { authentication } = response;
+      console.log('Authentication successful:', authentication);
       await fetchUserInfo(authentication?.accessToken);
     } else if (response?.type === 'error') {
-      setError('Failed to sign in with Google. Please try again.');
+      console.error('Google sign-in error:', response.error);
+      // Log the full error details for debugging
+      console.error('Error details:', JSON.stringify(response, null, 2));
+      setError(`Failed to sign in with Google: ${response.error?.message || 'Unknown error'}. Please try again.`);
+      setIsLoading(false);
+    } else if (response) {
+      console.log('Other response type:', response.type);
+      setError(`Sign in process returned ${response.type}. Please try again.`);
       setIsLoading(false);
     }
   };
