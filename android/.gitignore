@@ -1,0 +1,36 @@
+# OSX
+#
+.DS_Store
+
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+
+# Keystore files
+*.jks
+*.keystore
+!debug.keystore
+
+# Bundle artifacts
+*.jsbundle
+
+# Generated files
+bin/
+gen/
+out/
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+captures/
+
+# Gradle files
+.gradle/
+build/

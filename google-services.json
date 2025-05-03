@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "57102764070",
+    "project_id": "quick-reservation",
+    "storage_bucket": "quick-reservation.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:57102764070:android:4f09fee7",
+        "android_client_info": {
+          "package_name": "com.qreserv.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "57102764070-jq4fglluu8tlmp5790qq91s53kismp9o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.qreserv.app",
+            "certificate_hash": "2E5D403F2CFD4490E814516508A7B1B852BC264A"
+          }
+        },
+        {
+          "client_id": "57102764070-q106sapm1qn0rh33qrgqlpjnha9hpu0r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE6-k6Ry1GAWdwQVeUpAv087q1Nz9BBrc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "57102764070-q106sapm1qn0rh33qrgqlpjnha9hpu0r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
