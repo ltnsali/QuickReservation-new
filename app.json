@@ -24,7 +24,14 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.qreserv.app"
+      "package": "com.qreserv.app",
+      "googleServicesFile": "./google-services.json",
+      "config": {
+        "googleSignIn": {
+          "apiKey": "AIzaSyBE6-k6Ry1GAWdwQVeUpAv087q1Nz9BBrc",
+          "certificateHash": "2E5D403F2CFD4490E814516508A7B1B852BC264A"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png",
