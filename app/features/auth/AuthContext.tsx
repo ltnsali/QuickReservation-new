@@ -187,8 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await dispatch(createOrUpdateUser(userData)).unwrap();
       await persistUser(userData); // Store user data
       setUser(userData);
-      
-      try {
+        try {
         // If user is a business owner, check if they need to complete business setup
         if (userData.role === 'business') {
           // Fetch business data to check if it exists
@@ -196,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (businessResponse) {
             // Business already exists, go to main app
-            router.replace('/(app)');
+            router.replace(Platform.OS === 'web' ? '/(app)' : '(app)');
           } else {
             // Business doesn't exist yet, go to business setup
             router.replace('/business-setup');
@@ -297,14 +296,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })).unwrap();
       
       await persistUser(userResponse); // Store user data
-      setUser(userResponse);
-      
+      setUser(userResponse);      
       // If user is a business owner, also load their business data
       if (userResponse.role === 'business') {
         dispatch(fetchBusiness(userResponse.id));
       }
       
-      router.replace('/(app)');
+      // Use platform-specific navigation
+      if (Platform.OS === 'android') {
+        console.log('Android: Email login success, navigating to main app');
+        router.navigate('(app)');
+      } else {
+        router.replace('/(app)');
+      }
     } catch (error: any) {
       console.error('Error signing in with email/password:', error);
       setError(error.message || 'Failed to sign in');
@@ -331,12 +335,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       await persistUser(userResponse); // Store user data
       setUser(userResponse);
-      
-      // If registering as business, redirect to business setup
+        // If registering as business, redirect to business setup
       if (role === 'business') {
-        router.replace('/business-setup');
+        if (Platform.OS === 'android') {
+          console.log('Android: New business sign up, navigating to setup');
+          router.navigate('business-setup');
+        } else {
+          router.replace('/business-setup');
+        }
       } else {
-        router.replace('/(app)');
+        if (Platform.OS === 'android') {
+          console.log('Android: Customer sign up, navigating to main app');
+          router.navigate('(app)');
+        } else {
+          router.replace('/(app)');
+        }
       }
     } catch (error: any) {
       console.error('Error signing up with email/password:', error);
@@ -363,13 +376,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSignOut = async () => {
+  };  const handleSignOut = async () => {
     await auth.signOut();
     await AsyncStorage.removeItem(USER_STORAGE_KEY); // Remove stored user data
     setUser(null);
-    router.replace('/(auth)');
+    
+    console.log('Signed out, navigating to auth screen');
+    
+    // Use different navigation methods based on platform for better reliability
+    if (Platform.OS === 'android') {
+      router.navigate('(auth)');
+    } else {
+      router.replace('/(auth)');
+    }
   };
 
   return (

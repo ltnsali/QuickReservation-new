@@ -1,16 +1,15 @@
 import React from 'react';
 import { View, StyleSheet, Text, Image } from 'react-native';
 import { GoogleSignIn } from './GoogleSignIn';
-import { router } from 'expo-router';
+import { useAuth } from './AuthContext';
 
 export const AuthScreen = () => {
+  const { signIn } = useAuth();
+  
   const handleSignIn = (userData: any) => {
-    // Here you would typically:
-    // 1. Store the user data in your global state management (Redux, Context, etc.)
-    // 2. Store the authentication token securely
-    // 3. Navigate to the main app
+    // Just log the data - actual navigation is now handled in AuthContext
     console.log('User signed in:', userData);
-    router.replace('/(app)');
+    // No navigation here, it's handled by the AuthContext
   };
 
   return (

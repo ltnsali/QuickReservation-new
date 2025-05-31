@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
 import Constants from 'expo-constants';
+import { useAuth } from './AuthContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -14,9 +15,12 @@ const ANDROID_CLIENT_ID = '57102764070-jq4fglluu8tlmp5790qq91s53kismp9o.apps.goo
 // Expo client ID (for Expo Go)
 const EXPO_CLIENT_ID = '57102764070-q106sapm1qn0rh33qrgqlpjnha9hpu0r.apps.googleusercontent.com';
 
-export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }) => {
+export const GoogleSignIn = ({ onSignIn }: { onSignIn?: (userData: any) => void }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);  // For Android, we'll use the default configuration that works with the package name and SHA-1
+  const [error, setError] = useState<string | null>(null);
+  const { signIn } = useAuth();  // Use the AuthContext
+  
+  // For Android, we'll use the default configuration that works with the package name and SHA-1
   const redirectUri = makeRedirectUri({ scheme: 'qreserv' });
 
   console.log('Redirect URI:', redirectUri); // This will help us debug
@@ -32,19 +36,29 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }
         ...(Platform.OS === 'android' ? {} : { redirectUri }),
         scopes: ['profile', 'email']
       });
-
   useEffect(() => {
     if (Platform.OS !== 'web') {
       handleAuthResponse();
     }
-  }, [response]);  const handleAuthResponse = async () => {
-    console.log('Auth response received:', response);
+  }, [response]);  
+  
+  const handleAuthResponse = async () => {
+    console.log('📱 Auth response received:', JSON.stringify(response, null, 2));
     
     if (response?.type === 'success') {
       setIsLoading(true);
       const { authentication } = response;
-      console.log('Authentication successful:', authentication);
-      await fetchUserInfo(authentication?.accessToken);
+      console.log('📱 Authentication successful:', JSON.stringify(authentication, null, 2));
+      
+      // Check if we have a valid token before proceeding
+      if (authentication?.accessToken) {
+        console.log('📱 Valid access token received, proceeding with user info fetch');
+        await fetchUserInfo(authentication.accessToken);
+      } else {
+        console.error('📱 No access token in successful response');
+        setError('Authentication succeeded but no access token was received. Please try again.');
+        setIsLoading(false);
+      }
     } else if (response?.type === 'error') {
       console.error('Google sign-in error:', response.error);
       // Log the full error details for debugging
@@ -56,39 +70,65 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }
       setError(`Sign in process returned ${response.type}. Please try again.`);
       setIsLoading(false);
     }
-  };
-
-  const fetchUserInfo = async (token: string | undefined) => {
+  };  const fetchUserInfo = async (token: string | undefined) => {
     if (!token) {
+      console.log('📱 Authentication failed: No token received');
       setError('Authentication failed. Please try again.');
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+      console.log('📱 Fetching user info from Google API');
+      console.log(`📱 Token length: ${token.length} characters`);
+      console.log(`📱 Token preview: ${token.substring(0, 10)}...`);
+        const response = await fetch('https://www.googleapis.com/userinfo/v2/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log('📱 Google API response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch user info');
+        console.log('📱 Google API error:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.log('📱 Error response body:', errorText);
+        throw new Error(`Failed to fetch user info: ${response.status} ${response.statusText}`);
       }
 
       const userData = await response.json();
+      console.log('📱 User data retrieved:', JSON.stringify(userData, null, 2));
+      
       const userDataWithPhoto = {
         ...userData,
         photoUrl: userData.picture,
+        // Adding an ID field to ensure Firebase auth integration works properly
+        id: userData.id || userData.sub, // Google uses 'sub' as the unique identifier
       };
-      onSignIn(userDataWithPhoto);
+      
+      console.log('📱 Enhanced user data prepared for auth:', JSON.stringify(userDataWithPhoto, null, 2));
+      
+      // Call the AuthContext's signIn function ONLY
+      console.log('📱 Calling AuthContext signIn function');
+      try {
+        await signIn(userDataWithPhoto);
+        console.log('📱 SignIn function completed successfully');
+      } catch (signInError) {
+        console.error('📱 Error in signIn function:', signInError);
+        if (signInError instanceof Error) {
+          console.error('📱 SignIn error details:', signInError.message);
+        }
+        throw signInError;
+      }
+    
+    // Don't call onSignIn anymore - we're using the AuthContext navigation exclusively
+    // to avoid conflicts between navigation methods
     } catch (error) {
       console.error('Error fetching user info:', error);
       setError('Failed to get user information. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSignIn = async () => {
+  };  const handleSignIn = async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -96,13 +136,24 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn: (userData: any) => void }
         // Web sign-in is handled by the parent component
         return;
       } else {
-        await promptAsync();
+        console.log('📱 Starting Google Sign-In flow on Android');
+        console.log('📱 Redirect URI:', redirectUri);
+        console.log('📱 Android Client ID:', ANDROID_CLIENT_ID);
+        
+        // Try to use promptAsync and log the result
+        const result = await promptAsync();
+        console.log('📱 promptAsync result:', JSON.stringify(result, null, 2));
       }
     } catch (error) {
-      console.error('Error during sign in:', error);
+      console.error('📱 Error during sign in:', error);
+      if (error instanceof Error) {
+        console.error('📱 Error details - Name:', error.name);
+        console.error('📱 Error details - Message:', error.message);
+        console.error('📱 Error stack:', error.stack);
+      }
       setError('An unexpected error occurred. Please try again.');
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   if (Platform.OS === 'web') {

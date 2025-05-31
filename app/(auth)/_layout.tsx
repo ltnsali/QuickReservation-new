@@ -8,7 +8,8 @@ export default function AuthLayout() {
 
   // If user is authenticated, redirect to app
   if (user) {
-    return <Redirect href="/(app)" />;
+    // Redirect to the appropriate screen based on user type
+    return <Redirect href="/(app)/index" />;
   }
 
   return (

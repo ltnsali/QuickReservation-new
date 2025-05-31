@@ -37,17 +37,16 @@ export default function AuthScreen() {
     };
     signIn(enhancedUserData);
   };
-
   const navigateToLogin = () => {
     router.push({
-      pathname: '/login',
+      pathname: Platform.OS === 'web' ? '/login' : '(auth)/login',
       params: { type: userType }
     });
   };
 
   const navigateToRegister = () => {
     router.push({
-      pathname: '/register',
+      pathname: Platform.OS === 'web' ? '/register' : '(auth)/register',
       params: { type: userType }
     });
   };

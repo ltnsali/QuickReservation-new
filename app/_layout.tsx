@@ -3,23 +3,28 @@ import { PaperProvider } from 'react-native-paper';
 import { AuthProvider } from './features/auth/AuthContext';
 import { Provider } from 'react-redux';
 import { store } from '../store';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
+import { LoggerProvider, DebugOverlay } from '../components/DebugLogger';
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
       <AuthProvider>
         <PaperProvider>
-          <View style={styles.container}>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            >
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(app)" options={{ headerShown: false }} />
-            </Stack>
-          </View>
+          <LoggerProvider>
+            <View style={styles.container}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              >
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(app)" options={{ headerShown: false }} />
+              </Stack>
+              {/* Only show debug overlay on native platforms */}
+              {Platform.OS !== 'web' && <DebugOverlay />}
+            </View>
+          </LoggerProvider>
         </PaperProvider>
       </AuthProvider>
     </Provider>
@@ -29,6 +34,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    style: { pointerEvents: 'box-none' }
+    pointerEvents: 'box-none'
   },
 });

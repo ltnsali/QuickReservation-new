@@ -17,7 +17,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.qreserv.app"
+      "bundleIdentifier": "com.qreserv.app",
+      "jsEngine": "hermes"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +27,7 @@
       },
       "package": "com.qreserv.app",
       "googleServicesFile": "./google-services.json",
+      "jsEngine": "hermes",
       "config": {
         "googleSignIn": {
           "apiKey": "AIzaSyBE6-k6Ry1GAWdwQVeUpAv087q1Nz9BBrc",

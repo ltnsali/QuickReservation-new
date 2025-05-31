@@ -18,14 +18,13 @@ export default function AppLayout() {
   const [menuVisible, setMenuVisible] = React.useState(false);
   const { currentBusiness } = useAppSelector(state => state.user);
   const pathname = usePathname();
-  
   // If user is not authenticated, redirect to auth
   if (!user) {
+    console.log('User not authenticated, redirecting to auth screen');
     return <Redirect href="/(auth)" />;
   }
-
-  // Determine if user is a business owner
-  const isBusinessOwner = user.role === 'business';
+  // Determine if user is a business owner, default to customer if role is not set
+  const isBusinessOwner = user?.role === 'business' || false;
   
   // Get the current screen title based on pathname
   const getCurrentScreenTitle = () => {

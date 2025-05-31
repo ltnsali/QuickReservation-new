@@ -14,12 +14,11 @@ service cloud.firestore {
     function isBusinessOwner(businessId) {
       let business = get(/databases/$(database)/documents/businesses/$(businessId));
       return business != null && business.data.ownerId == request.auth.uid;
-    }
-
-    // Users collection rules
+    }    // Users collection rules
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if isOwner(userId);
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update, delete: if isOwner(userId);
     }
     
     // Reservations collection rules

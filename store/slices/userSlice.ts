@@ -50,12 +50,25 @@ const initialState: UserState = {
 
 export const createOrUpdateUser = createAsyncThunk(
   'user/createOrUpdate',
-  async (userData: Omit<User, 'createdAt' | 'lastLoginAt'>) => {
-    const user = await saveUserToFirestore({
-      ...userData,
-      lastLoginAt: new Date().toISOString(),
-    });
-    return user;
+  async (userData: Partial<User>, { rejectWithValue }) => {
+    try {
+      const now = new Date().toISOString();
+      const user: User = {
+        id: userData.id!,
+        email: userData.email!,
+        name: userData.name!,
+        photo: userData.photo,
+        role: userData.role || 'customer', // Default to customer if no role specified
+        createdAt: now,
+        lastLoginAt: now,
+      };
+      
+      await saveUserToFirestore(user);
+      return user;
+    } catch (error: any) {
+      console.error('Error saving user:', error);
+      return rejectWithValue(error.message);
+    }
   }
 );
 
