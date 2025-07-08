@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Image, Platform } from 'react-native';
 import { Button, TextInput, Text, HelperText } from 'react-native-paper';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../features/auth/AuthContext';
+import { GoogleSignIn } from '../features/auth/GoogleSignIn';
 
 export default function LoginScreen() {
   const { type = 'customer' } = useLocalSearchParams<{ type: string }>();
@@ -11,6 +12,19 @@ export default function LoginScreen() {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const { emailPasswordSignIn, error, isLoading } = useAuth();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && window.google && googleButtonRef.current) {
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        width: googleButtonRef.current.offsetWidth,
+        logo_alignment: 'center'
+      });
+    }
+  }, [googleButtonRef.current]);
 
   const validateEmail = () => {
     if (!email) {
@@ -53,6 +67,20 @@ export default function LoginScreen() {
         </Text>
         
         <View style={styles.form}>
+          <View style={styles.googleSignInContainer}>
+            {Platform.OS === 'web' ? (
+              <div ref={googleButtonRef} style={{ width: '100%', height: 40 }} />
+            ) : (
+              <GoogleSignIn onSignIn={handleLogin} />
+            )}
+          </View>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
           <TextInput
             label="Email"
             value={email}
@@ -91,8 +119,6 @@ export default function LoginScreen() {
             buttonColor="#4A00E0"
             loading={isLoading}
             disabled={isLoading}
-            animating={true}
-            useNativeDriver={Platform.OS !== 'web'}
           >
             Sign In
           </Button>
@@ -161,5 +187,23 @@ const styles = StyleSheet.create({
   },
   textButton: {
     marginBottom: 8,
+  },
+  googleSignInContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: '#64748B',
   },
 });

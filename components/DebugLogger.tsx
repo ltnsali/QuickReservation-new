@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 
 // Create a context for the logger
@@ -21,12 +21,20 @@ export const useLogger = () => {
 export const LoggerProvider = ({ children }: { children: React.ReactNode }) => {
   const [logs, setLogs] = useState<string[]>([]);
 
+  const addLog = useCallback((log: string) => {
+    const timestamp = new Date().toISOString().substr(11, 8); // HH:MM:SS
+    setLogs(prevLogs => [...prevLogs, `[${timestamp}] ${log}`].slice(-100));  // Keep last 100 logs
+  }, []);
+
   useEffect(() => {
     // Save original console.log
     const originalConsoleLog = console.log;
 
     // Override console.log
     console.log = (...args: any[]) => {
+      // Call original console.log
+      originalConsoleLog(...args);
+      
       const log = args.map(arg => {
         if (typeof arg === 'object') {
           try {
@@ -38,30 +46,28 @@ export const LoggerProvider = ({ children }: { children: React.ReactNode }) => {
         return String(arg);
       }).join(' ');
       
-      // Call original console.log
-      originalConsoleLog(...args);
-      
-      // Add to our logs
-      const timestamp = new Date().toISOString().substr(11, 8); // HH:MM:SS
-      setLogs(prevLogs => [...prevLogs, `[${timestamp}] ${log}`].slice(-100));  // Keep last 100 logs
+      // Add to our logs using the memoized addLog function
+      addLog(log);
     };
 
     // Restore original console.log when component unmounts
     return () => {
       console.log = originalConsoleLog;
     };
-  }, []); // Empty dependency array since we don't want this to re-run
-  const addLog = (log: string) => {
-    const timestamp = new Date().toISOString().substr(11, 8); // HH:MM:SS
-    setLogs(prevLogs => [...prevLogs, `[${timestamp}] ${log}`].slice(-100));  // Keep last 100 logs
-  };
+  }, [addLog]); // Add addLog to dependencies
 
-  const clearLogs = () => {
+  const clearLogs = useCallback(() => {
     setLogs([]);
+  }, []);
+
+  const value = {
+    logs,
+    addLog,
+    clearLogs
   };
 
   return (
-    <LoggerContext.Provider value={{ logs, addLog, clearLogs }}>
+    <LoggerContext.Provider value={value}>
       {children}
     </LoggerContext.Provider>
   );

@@ -5,13 +5,13 @@ import { getStorage } from 'firebase/storage';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: 'AIzaSyBE6-k6Ry1GAWdwQVeUpAv087q1Nz9BBrc',
-  authDomain: 'quick-reservation.firebaseapp.com',
-  projectId: 'quick-reservation',
-  storageBucket: 'quick-reservation.firebasestorage.app',
-  messagingSenderId: '57102764070',
-  appId: '1:57102764070:web:0aee488c1c8ddf4f09fee7',
-  measurementId: 'G-50TYH4J52P',
+  apiKey: "AIzaSyDXzlcXOFoELS6Cup9ks2OlP01trBz1d48",
+  authDomain: "my-quick-reservation.firebaseapp.com",
+  projectId: "my-quick-reservation",
+  storageBucket: "my-quick-reservation.firebasestorage.app",
+  messagingSenderId: "428885648882",
+  appId: "1:428885648882:web:a2f25b9157021333eeb76b",
+  measurementId: "G-Y2D10DTRL3"
 };
 
 // Initialize Firebase
