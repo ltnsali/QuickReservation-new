@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
         elevation: 3,
       },
     }),
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
   icon: {
     width: 32,
@@ -60,5 +61,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 1,
+  },
+  button: {
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
   },
 });

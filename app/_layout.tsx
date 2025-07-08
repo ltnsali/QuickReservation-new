@@ -12,7 +12,7 @@ export default function RootLayout() {
       <AuthProvider>
         <PaperProvider>
           <LoggerProvider>
-            <View style={styles.container}>
+            <View style={[styles.container, { pointerEvents: 'box-none' }]}>
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -34,6 +34,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    pointerEvents: 'box-none'
   },
 });

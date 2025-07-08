@@ -82,32 +82,6 @@ export default function AuthScreen() {
             ? 'Sign in to manage your reservations' 
             : 'Sign in to manage your business'}
         </Text>
-
-        <View style={styles.buttonContainer}>
-          <Button 
-            mode="contained" 
-            onPress={navigateToLogin} 
-            style={styles.button}
-            buttonColor="#4A00E0"
-          >
-            Sign In
-          </Button>
-          
-          <Button 
-            mode="outlined" 
-            onPress={navigateToRegister}
-            style={[styles.button, styles.registerButton]} 
-            textColor="#4A00E0"
-          >
-            Create Account
-          </Button>
-        </View>
-        
-        <View style={styles.separator}>
-          <View style={styles.line} />
-          <Text style={styles.orText}>or</Text>
-          <View style={styles.line} />
-        </View>
         
         <View style={styles.signInContainer}>
           {Platform.OS === 'web' ? (
@@ -152,34 +126,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
   },
-  buttonContainer: {
-    width: '100%',
-    maxWidth: 320,
-    marginBottom: 24,
-  },
-  button: {
-    marginBottom: 12,
-    borderRadius: 8,
-  },
-  registerButton: {
-    borderColor: '#4A00E0',
-  },
-  separator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 320,
-    marginBottom: 24,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#CBD5E1',
-  },
-  orText: {
-    paddingHorizontal: 16,
-    color: '#64748B',
-  },
+
+
   signInContainer: {
     width: '100%',
     maxWidth: 320,
