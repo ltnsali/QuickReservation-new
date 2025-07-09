@@ -37,16 +37,10 @@ export default function AuthScreen() {
     };
     signIn(enhancedUserData);
   };
+
   const navigateToLogin = () => {
     router.push({
       pathname: Platform.OS === 'web' ? '/login' : '(auth)/login',
-      params: { type: userType }
-    });
-  };
-
-  const navigateToRegister = () => {
-    router.push({
-      pathname: Platform.OS === 'web' ? '/register' : '(auth)/register',
       params: { type: userType }
     });
   };
@@ -91,15 +85,6 @@ export default function AuthScreen() {
             buttonColor="#4A00E0"
           >
             Sign In
-          </Button>
-          
-          <Button 
-            mode="outlined" 
-            onPress={navigateToRegister}
-            style={[styles.button, styles.registerButton]} 
-            textColor="#4A00E0"
-          >
-            Create Account
           </Button>
         </View>
         
@@ -160,9 +145,6 @@ const styles = StyleSheet.create({
   button: {
     marginBottom: 12,
     borderRadius: 8,
-  },
-  registerButton: {
-    borderColor: '#4A00E0',
   },
   separator: {
     flexDirection: 'row',
