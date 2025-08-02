@@ -173,7 +173,8 @@ export default function AppLayout() {
           }}
         />
       </Tabs>
-      {Platform.OS === 'android' && __DEV__ && <AuthDebugger />}
+      {/* Auth debugger - uncomment if you need to debug authentication issues */}
+      {/* {Platform.OS === 'android' && __DEV__ && <AuthDebugger />} */}
     </>
   );
 }
