@@ -18,9 +18,16 @@ export default function AppLayout() {
   const [menuVisible, setMenuVisible] = React.useState(false);
   const { currentBusiness } = useAppSelector(state => state.user);
   const pathname = usePathname();
+
+  // Log authentication status in useEffect to avoid render phase issues
+  React.useEffect(() => {
+    if (!user) {
+      console.log('User not authenticated, redirecting to auth screen');
+    }
+  }, [user]);
+
   // If user is not authenticated, redirect to auth
   if (!user) {
-    console.log('User not authenticated, redirecting to auth screen');
     return <Redirect href="/(auth)" />;
   }
   // Determine if user is a business owner, default to customer if role is not set

@@ -27,6 +27,10 @@ export const LoggerProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Override console.log
     console.log = (...args: any[]) => {
+      // Call original console.log first
+      originalConsoleLog(...args);
+      
+      // Add to our logs in a way that doesn't cause render issues
       const log = args.map(arg => {
         if (typeof arg === 'object') {
           try {
@@ -38,12 +42,12 @@ export const LoggerProvider = ({ children }: { children: React.ReactNode }) => {
         return String(arg);
       }).join(' ');
       
-      // Call original console.log
-      originalConsoleLog(...args);
-      
-      // Add to our logs
       const timestamp = new Date().toISOString().substr(11, 8); // HH:MM:SS
-      setLogs(prevLogs => [...prevLogs, `[${timestamp}] ${log}`].slice(-100));  // Keep last 100 logs
+      
+      // Use a timeout to defer the state update and avoid render phase issues
+      setTimeout(() => {
+        setLogs(prevLogs => [...prevLogs, `[${timestamp}] ${log}`].slice(-100));  // Keep last 100 logs
+      }, 0);
     };
 
     // Restore original console.log when component unmounts
