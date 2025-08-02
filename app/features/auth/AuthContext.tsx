@@ -189,30 +189,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
         try {
         // If user is a business owner, check if they need to complete business setup
-        if (userData.role === 'business') {
-          // Fetch business data to check if it exists
-          const businessResponse = await dispatch(fetchBusiness(userData.id)).unwrap();
-          
-          if (businessResponse) {
-            // Business already exists, go to main app
-            router.replace(Platform.OS === 'web' ? '/(app)' : '(app)');
-          } else {
-            // Business doesn't exist yet, go to business setup
+        if (userInfo.role === 'business') {
+          try {
+            // Fetch business data to check if it exists
+            const businessResponse = await dispatch(fetchBusiness(userInfo.id)).unwrap();
+            
+            if (businessResponse) {
+              // Business already exists, go to main app
+              router.replace('/(app)');
+            } else {
+              // Business doesn't exist yet, go to business setup
+              router.replace('/business-setup');
+            }
+          } catch (businessError: any) {
+            console.warn('Error checking business data:', businessError);
+            // If there's any issue fetching business data,
+            // assume we need to create the business profile
             router.replace('/business-setup');
           }
         } else {
           // Regular customer, go to main app
           router.replace('/(app)');
         }
-      } catch (businessError) {
-        console.warn('Error checking business data:', businessError);
-        // If there's any issue fetching business data,
-        // assume we need to create the business profile
-        if (userData.role === 'business') {
-          router.replace('/business-setup');
-        } else {
-          router.replace('/(app)');
-        }
+      } catch (navigationError: any) {
+        console.error('Navigation error:', navigationError);
+        // Fallback navigation
+        router.replace('/(app)');
       }
     } catch (error: any) {
       console.error('Error handling credential response:', error);
@@ -229,30 +231,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (userData) {
         console.log('Mobile sign in data received:', userData);
+        
         // Handle direct user data (from mobile flow)
-        const userInfo: User = {
+        let userInfo: User = {
           id: userData.id,
           email: userData.email,
           name: userData.name,
           photo: userData.photoUrl || userData.picture,
           role: userData.role || 'customer', // Get role from passed data
         };
+        
+        // First authenticate with Firebase Auth using the Google token
+        if (userData.idToken) {
+          try {
+            const credential = GoogleAuthProvider.credential(userData.idToken);
+            const result = await signInWithCredential(auth, credential);
+            console.log('Firebase authentication successful:', result.user.uid);
+            
+            // Use Firebase Auth UID as the primary user ID
+            userInfo.id = result.user.uid;
+          } catch (firebaseError: any) {
+            console.warn('Firebase authentication failed, continuing with Google ID:', firebaseError.message);
+            // Continue with Google's user ID if Firebase auth fails
+          }
+        }
 
-        // Save user data to Firestore
-        await dispatch(createOrUpdateUser(userInfo)).unwrap();
-        await persistUser(userInfo); // Store user data
+        // Save user data to Firestore with retry logic
+        try {
+          await dispatch(createOrUpdateUser(userInfo)).unwrap();
+          console.log('User data saved to Firestore successfully');
+        } catch (firestoreError: any) {
+          console.error('Failed to save user data to Firestore:', firestoreError);
+          // Still continue with the authentication flow
+          setError('User data saved locally but failed to sync with server. You can still continue.');
+        }
+        
+        await persistUser(userInfo); // Store user data locally
         setUser(userInfo);
         
         // If user is a business owner, check if they need to complete business setup
         if (userInfo.role === 'business') {
-          // Fetch business data to check if it exists
-          const businessResponse = await dispatch(fetchBusiness(userInfo.id)).unwrap();
-          
-          if (businessResponse) {
-            // Business already exists, go to main app
-            router.replace('/(app)');
-          } else {
-            // Business doesn't exist yet, go to business setup
+          try {
+            // Fetch business data to check if it exists
+            const businessResponse = await dispatch(fetchBusiness(userInfo.id)).unwrap();
+            
+            if (businessResponse) {
+              // Business already exists, go to main app
+              router.replace('/(app)');
+            } else {
+              // Business doesn't exist yet, go to business setup
+              router.replace('/business-setup');
+            }
+          } catch (businessError: any) {
+            console.warn('Error checking business data:', businessError);
+            // If there's any issue fetching business data,
+            // assume we need to create the business profile
             router.replace('/business-setup');
           }
         } else {

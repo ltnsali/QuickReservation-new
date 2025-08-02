@@ -53,7 +53,7 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn?: (userData: any) => void 
       // Check if we have a valid token before proceeding
       if (authentication?.accessToken) {
         console.log('📱 Valid access token received, proceeding with user info fetch');
-        await fetchUserInfo(authentication.accessToken);
+        await fetchUserInfo(authentication.accessToken, authentication.idToken);
       } else {
         console.error('📱 No access token in successful response');
         setError('Authentication succeeded but no access token was received. Please try again.');
@@ -70,7 +70,7 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn?: (userData: any) => void 
       setError(`Sign in process returned ${response.type}. Please try again.`);
       setIsLoading(false);
     }
-  };  const fetchUserInfo = async (token: string | undefined) => {
+  };  const fetchUserInfo = async (token: string | undefined, idToken?: string | undefined) => {
     if (!token) {
       console.log('📱 Authentication failed: No token received');
       setError('Authentication failed. Please try again.');
@@ -103,6 +103,8 @@ export const GoogleSignIn = ({ onSignIn }: { onSignIn?: (userData: any) => void 
         photoUrl: userData.picture,
         // Adding an ID field to ensure Firebase auth integration works properly
         id: userData.id || userData.sub, // Google uses 'sub' as the unique identifier
+        // Include the ID token for Firebase authentication
+        idToken: idToken || null,
       };
       
       console.log('📱 Enhanced user data prepared for auth:', JSON.stringify(userDataWithPhoto, null, 2));

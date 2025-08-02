@@ -14,10 +14,16 @@ service cloud.firestore {
     function isBusinessOwner(businessId) {
       let business = get(/databases/$(database)/documents/businesses/$(businessId));
       return business != null && business.data.ownerId == request.auth.uid;
-    }    // Users collection rules
+    }
+    
+    // Users collection rules - Allow creation even with email/password signup
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      // Allow create for any authenticated user to support various auth methods
+      allow create: if isSignedIn() && (
+        request.auth.uid == userId || 
+        request.auth.uid == resource.id
+      );
       allow update, delete: if isOwner(userId);
     }
     

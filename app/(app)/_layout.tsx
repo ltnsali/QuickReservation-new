@@ -8,6 +8,7 @@ import { useAuth } from '../features/auth/AuthContext';
 import { Redirect } from 'expo-router';
 import { HeaderTitle } from '../../components/HeaderTitle';
 import { UserAvatar } from '../../components/ui/UserAvatar';
+import { AuthDebugger } from '../../components/AuthDebugger';
 import { useAppSelector } from '../../store/hooks';
 
 const HEADER_HEIGHT = Platform.OS === 'ios' ? 96 : 80;
@@ -172,6 +173,7 @@ export default function AppLayout() {
           }}
         />
       </Tabs>
+      {Platform.OS === 'android' && __DEV__ && <AuthDebugger />}
     </>
   );
 }
