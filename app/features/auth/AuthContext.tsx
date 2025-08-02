@@ -189,10 +189,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
         try {
         // If user is a business owner, check if they need to complete business setup
-        if (userInfo.role === 'business') {
+        if (userData.role === 'business') {
           try {
             // Fetch business data to check if it exists
-            const businessResponse = await dispatch(fetchBusiness(userInfo.id)).unwrap();
+            const businessResponse = await dispatch(fetchBusiness(userData.id)).unwrap();
             
             if (businessResponse) {
               // Business already exists, go to main app
